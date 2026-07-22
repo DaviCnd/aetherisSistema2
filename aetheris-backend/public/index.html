@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aetheris — Ficha de Personagem</title>
+<style>
+:root{
+  --bg:#100e18;
+  --bg2:#17141f;
+  --panel:#1c1826;
+  --panel2:#221d2f;
+  --line:#332c42;
+  --ink:#ece7f5;
+  --muted:#948da8;
+  --gold:#c9a668;
+  --gold-dim:#8a7247;
+  --teal:#6fa8a0;
+  --crimson:#9a3348;
+  --crimson-dim:#5c1f2c;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+}
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:
+    radial-gradient(ellipse at 20% -10%, #241c33 0%, transparent 45%),
+    radial-gradient(ellipse at 90% 110%, #2a1420 0%, transparent 40%),
+    var(--bg);
+  color:var(--ink);
+  font-family:var(--font-body);
+  padding:28px 16px 80px;
+}
+.sheet{max-width:960px;margin:0 auto;}
+
+.header{
+  text-align:center;
+  margin-bottom:28px;
+  padding-bottom:20px;
+  border-bottom:1px solid var(--line);
+  position:relative;
+}
+.header .eyebrow{
+  font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold-dim);
+  margin-bottom:6px;
+}
+.header h1{
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:44px;
+  margin:0;
+  letter-spacing:.03em;
+  background:linear-gradient(180deg,#f3e6c8,var(--gold) 60%,var(--gold-dim));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.header p{color:var(--muted);margin:6px 0 0;font-size:13px;letter-spacing:.03em;}
+
+.panel{
+  background:linear-gradient(180deg,var(--panel),var(--bg2));
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:20px 22px;
+  margin-bottom:18px;
+}
+.panel h2{
+  font-family:var(--font-display);
+  font-size:20px;font-weight:600;
+  margin:0 0 16px;
+  color:var(--gold);
+  display:flex;align-items:center;gap:10px;
+}
+.panel h2 .bar{width:3px;height:16px;background:var(--gold);border-radius:2px;display:inline-block;}
+
+.grid{display:grid;gap:14px;}
+.grid-2{grid-template-columns:1fr 1fr;}
+.grid-3{grid-template-columns:repeat(3,1fr);}
+.grid-4{grid-template-columns:repeat(4,1fr);}
+.grid-5{grid-template-columns:repeat(5,1fr);}
+@media(max-width:680px){.grid-2,.grid-3,.grid-4,.grid-5{grid-template-columns:1fr 1fr;}}
+
+label{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+input[type=text], input[type=number], select, textarea{
+  width:100%;background:#0d0b13;border:1px solid var(--line);color:var(--ink);
+  padding:9px 10px;border-radius:6px;font-family:var(--font-body);font-size:14px;
+}
+input:focus, select:focus, textarea:focus{outline:none;border-color:var(--gold-dim);}
+textarea{resize:vertical;min-height:60px;}
+.field{margin-bottom:0;}
+.hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;}
+.hint b{color:var(--ink);}
+
+.attr-card{
+  background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+  padding:14px;text-align:center;
+}
+.attr-card .name{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.attr-card .row{display:flex;align-items:center;justify-content:center;gap:10px;}
+.attr-card .val{font-family:var(--font-display);font-size:30px;font-weight:700;min-width:44px;color:var(--ink);}
+.stepper-btn{
+  width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:#0d0b13;
+  color:var(--gold);font-size:16px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;
+  transition:.15s;
+}
+.stepper-btn:hover:not(:disabled){border-color:var(--gold-dim);background:#221c14;}
+.stepper-btn:disabled{opacity:.3;cursor:not-allowed;}
+.pool-note{text-align:center;font-size:13px;color:var(--muted);margin-top:12px;}
+.pool-note b{color:var(--gold);}
+
+.stat-card{
+  background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:14px;
+}
+.stat-card .label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.stat-card .value{font-family:var(--font-display);font-size:26px;font-weight:700;color:var(--ink);}
+.stat-card .sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.bar-outer{height:8px;background:#0d0b13;border-radius:5px;overflow:hidden;margin-top:8px;border:1px solid var(--line);}
+.bar-inner{height:100%;transition:width .2s;}
+.bar-pv .bar-inner{background:linear-gradient(90deg,#7a1f2c,var(--crimson));}
+.bar-pe .bar-inner{background:linear-gradient(90deg,#2f6f74,var(--teal));}
+.bar-corr .bar-inner{background:linear-gradient(90deg,var(--gold) 0%, var(--crimson) 70%, #3a0e17 100%);}
+.bar-soul .bar-inner{background:linear-gradient(90deg,#4a4470,#a89bd6);}
+.track-row{display:flex;align-items:center;gap:8px;margin-top:8px;}
+.track-row input[type=number]{width:60px;text-align:center;}
+
+.lore-box{
+  margin-top:14px;background:#0d0b13;border:1px solid var(--line);border-left:3px solid var(--gold-dim);
+  border-radius:6px;padding:12px 14px;font-size:13px;line-height:1.6;color:#cfc9dd;
+}
+.lore-box b{color:var(--gold);}
+.tag{
+  display:inline-block;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;
+  background:#241c14;color:var(--gold);border:1px solid var(--gold-dim);border-radius:4px;
+  padding:2px 7px;margin-right:6px;margin-top:6px;
+}
+
+.prof-region{margin-bottom:16px;}
+.prof-region h3{
+  font-family:var(--font-display);font-size:16px;color:var(--gold);margin:0 0 8px;
+  border-bottom:1px solid var(--gold-dim);padding-bottom:4px;
+}
+.prof-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+@media(max-width:680px){.prof-grid{grid-template-columns:1fr;}}
+.prof-card{
+  background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:10px 12px;font-size:13px;
+}
+.prof-card.selected{border-color:var(--gold-dim);background:#241c14;}
+.prof-card .pname{color:var(--ink);font-weight:600;margin-bottom:4px;}
+
+table.skills{width:100%;border-collapse:collapse;font-size:13px;}
+table.skills th{
+  text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+  padding:6px 8px;border-bottom:1px solid var(--line);
+}
+table.skills td{padding:6px 8px;border-bottom:1px solid #241f30;vertical-align:middle;}
+table.skills tr.group-row td{
+  padding-top:14px;font-family:var(--font-display);font-size:15px;color:var(--gold);
+  border-bottom:1px solid var(--gold-dim);font-weight:600;
+}
+.skill-name{color:var(--ink);}
+.mini-disp{text-align:center;color:var(--muted);}
+.total-pill{
+  display:inline-block;min-width:32px;text-align:center;background:#241c14;color:var(--gold);
+  border:1px solid var(--gold-dim);border-radius:5px;padding:3px 6px;font-weight:600;
+}
+.train-controls{display:flex;align-items:center;gap:4px;justify-content:center;}
+.train-controls .stepper-btn{width:22px;height:22px;font-size:13px;}
+.train-val{min-width:16px;text-align:center;}
+
+.bless-row{
+  display:grid;grid-template-columns:1.3fr 1fr .8fr .6fr 1.6fr auto;gap:8px;align-items:end;margin-bottom:10px;
+}
+@media(max-width:800px){.bless-row{grid-template-columns:1fr 1fr;}}
+.remove-btn{
+  background:var(--crimson-dim);border:1px solid var(--crimson);color:#f3d9de;border-radius:6px;
+  width:34px;height:34px;cursor:pointer;font-size:15px;
+}
+.add-btn{
+  background:#241c14;border:1px solid var(--gold-dim);color:var(--gold);border-radius:6px;
+  padding:9px 16px;font-size:13px;cursor:pointer;letter-spacing:.03em;
+}
+.add-btn:hover{background:#2c2117;}
+
+.level-row{display:flex;gap:18px;align-items:center;flex-wrap:wrap;}
+.level-badge{
+  font-family:var(--font-display);font-size:34px;font-weight:700;color:var(--gold);
+  background:#0d0b13;border:2px solid var(--gold-dim);border-radius:50%;
+  width:64px;height:64px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.xp-wrap{flex:1;min-width:220px;}
+.level-up-btn{
+  background:linear-gradient(180deg,#e4c98d,var(--gold));color:#211a0c;border:none;border-radius:6px;
+  padding:10px 16px;font-weight:700;cursor:pointer;font-size:13px;letter-spacing:.03em;
+}
+.level-up-btn:disabled{opacity:.35;cursor:not-allowed;background:#4a4438;color:#7a7566;}
+
+footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px;}
+.print-btn{
+  background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;
+  padding:8px 14px;cursor:pointer;font-size:12px;margin-top:6px;
+}
+@media print{
+  body{background:#fff;color:#111;}
+  .panel{background:#fff;border:1px solid #999;}
+  .stepper-btn,.remove-btn,.add-btn,.level-up-btn,.print-btn{display:none!important;}
+  .header h1{-webkit-text-fill-color:#111;background:none;color:#111;}
+}
+</style>
+</head>
+<body>
+
+<div id="auth-overlay" style="position:fixed;inset:0;background:rgba(10,9,15,.92);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px;">
+  <div class="panel" style="max-width:380px;width:100%;">
+    <h2><span class="bar"></span>Entrar em Aetheris</h2>
+    <div class="field" style="margin-bottom:12px;"><label>Usuário</label><input type="text" id="auth-username" autocomplete="username"></div>
+    <div class="field" style="margin-bottom:14px;"><label>Senha</label><input type="password" id="auth-password" autocomplete="current-password"></div>
+    <div style="display:flex;gap:8px;">
+      <button class="level-up-btn" style="flex:1;" onclick="doLogin()">Entrar</button>
+      <button class="add-btn" style="flex:1;" onclick="doRegister()">Criar Conta</button>
+    </div>
+    <div class="hint" id="auth-status" style="margin-top:10px;"></div>
+    <div class="hint">Suas fichas ficam guardadas no servidor, vinculadas à sua conta — acessíveis de qualquer dispositivo.</div>
+  </div>
+</div>
+
+<div class="sheet" id="app-content" style="display:none;">
+
+  <div class="header">
+    <div class="eyebrow">Livro de Personagem</div>
+    <h1>AETHERIS</h1>
+    <p>Ficha interativa — atributos, perícias e status calculados automaticamente</p>
+    <div style="margin-top:10px;font-size:12px;color:var(--muted);">
+      Logado como <b id="whoami" style="color:var(--gold);"></b> ·
+      <button class="print-btn" style="padding:3px 10px;" onclick="doLogout()">Sair</button>
+    </div>
+  </div>
+
+  <div class="panel" id="save-panel">
+    <h2><span class="bar"></span>Fichas Salvas (na sua conta)</h2>
+    <div class="grid grid-3" style="align-items:end;">
+      <div class="field">
+        <label>Nome pra salvar</label>
+        <input type="text" id="save-name" placeholder="Ex: Kael, o Lupir">
+      </div>
+      <div class="field">
+        <label>Fichas salvas</label>
+        <select id="sheet-select"><option value="">— nenhuma salva —</option></select>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="add-btn" onclick="saveCurrentSheet()">Salvar</button>
+        <button class="add-btn" onclick="loadSelectedSheet()">Carregar</button>
+        <button class="remove-btn" style="width:auto;padding:0 12px;" onclick="deleteSelectedSheet()">Excluir</button>
+      </div>
+    </div>
+    <div class="hint" id="save-status" style="margin-top:10px;"></div>
+    <div class="hint">Suas fichas ficam salvas no banco de dados do servidor, na sua conta — acessíveis de qualquer computador em que você fizer login. Também dá pra exportar/importar em .json como backup local.</div>
+    <div class="grid grid-2" style="margin-top:10px;">
+      <button class="add-btn" onclick="exportSheet()">Exportar ficha atual (.json)</button>
+      <div>
+        <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importSheet(event)">
+        <button class="add-btn" onclick="document.getElementById('import-file').click()">Importar ficha (.json)</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2><span class="bar"></span>Identidade</h2>
+    <div class="grid grid-4" style="margin-bottom:14px;">
+      <div class="field"><label>Nome</label><input type="text" id="f-nome" placeholder="Nome do personagem"></div>
+      <div class="field"><label>Jogador</label><input type="text" id="f-jogador" placeholder="Seu nome"></div>
+      <div class="field"><label>Região de Origem</label><input type="text" id="f-regiao" placeholder="Ex: Vharos"></div>
+      <div class="field"><label>Deus / Culto</label><input type="text" id="f-deus" placeholder="Ex: Montus"></div>
+    </div>
+    <div class="field"><label>Promessa / Motivação</label><input type="text" id="f-promessa" placeholder="O que move este personagem?"></div>
+  </div>
+
+  <div class="panel">
+    <h2><span class="bar"></span>Nível &amp; Experiência</h2>
+    <div class="level-row">
+      <div class="level-badge" id="level-badge">1</div>
+      <div class="xp-wrap">
+        <div class="track-row" style="margin-top:0;">
+          <span style="font-size:12px;color:var(--muted);">XP atual:</span>
+          <input type="number" id="xp-current" value="0" min="0" style="width:90px;">
+          <span style="font-size:12px;color:var(--muted);">/ <span id="xp-needed">150</span> para o próximo nível</span>
+        </div>
+        <div class="bar-outer" style="margin-top:10px;"><div class="bar-inner" id="xp-bar" style="width:0%;background:linear-gradient(90deg,#8a7247,var(--gold));"></div></div>
+      </div>
+      <button class="level-up-btn" id="level-up-btn" onclick="levelUp()">Subir de Nível ▲</button>
+    </div>
+    <div class="hint" id="level-gain-hint" style="margin-top:14px;"></div>
+  </div>
+
+  <div class="panel">
+    <h2><span class="bar"></span>Atributos</h2>
+    <div class="grid grid-5" id="attr-grid"></div>
+    <div class="pool-note">Pontos disponíveis: <b id="attr-pool-remaining">10</b> / <span id="attr-pool-total">10</span> &nbsp;·&nbsp; Máximo por atributo neste nível: <b id="attr-cap">5</b></div>
+  </div>
+
+  <div class="panel">
+    <h2><span class="bar"></span>Raça &amp; Profissão</h2>
+    <div class="grid grid-2">
+      <div>
+        <div class="field"><label>Raça</label>
+          <select id="f-raca" onchange="onRaceChange()"></select>
+        </div>
+        <div id="human-choices" style="display:none;margin-top:10px;" class="grid grid-2">
+          <div class="field"><label>Bônus racial livre 1</label><select id="human-choice-1"></select></div>
+          <div class="field"><label>Bônus racial livre 2</label><select id="human-choice-2"></select></div>
+        </div>
+      </div>
+      <div>
+        <div class="field"><label>Profissão</label>
+          <select id="f-profissao" onchange="recalc()"></select>
+        </div>
+        <div class="lore-box" id="prof-lore" style="margin-top:10px;"></div>
+      </div>
+    </div>
+    <div class="lore-box" id="race-lore" style="margin-top:16px;"></div>
+  </div>
+
+  <div class="panel">
+    <h2><span class="bar"></span>Referência de Profissões (todas as regiões)</h2>
+    <div id="prof-reference"></div>
+  </div>
+
+  <div class="panel">
+    <h2><span class="bar"></span>Status de Combate</h2>
+    <div class="grid grid-4" style="margin-bottom:14px;">
+      <div class="stat-card">
+        <div class="label">Pontos de Vida</div>
+        <div class="value"><span id="pv-current">10</span> / <span id="pv-max">10</span></div>
+        <div class="bar-outer bar-pv"><div class="bar-inner" id="pv-bar" style="width:100%;"></div></div>
+        <div class="track-row">
+          <button class="stepper-btn" onclick="adjustCurrent('pv',-1)">−</button>
+          <button class="stepper-btn" onclick="adjustCurrent('pv',1)">+</button>
+          <span class="sub">ajustar PV atual</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Pontos de Energia</div>
+        <div class="value"><span id="pe-current">8</span> / <span id="pe-max">8</span></div>
+        <div class="bar-outer bar-pe"><div class="bar-inner" id="pe-bar" style="width:100%;"></div></div>
+        <div class="track-row">
+          <button class="stepper-btn" onclick="adjustCurrent('pe',-1)">−</button>
+          <button class="stepper-btn" onclick="adjustCurrent('pe',1)">+</button>
+          <span class="sub">ajustar PE atual</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Defesa</div>
+        <div class="value" id="stat-defesa">10</div>
+        <div class="sub">10 + Destreza × 2 (+ bônus de raça)</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Resist. a Corrupção</div>
+        <div class="value" id="stat-rescorr">0</div>
+        <div class="sub">= Vontade (+ bônus de raça)</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Dado de Crítico Físico</div>
+        <div class="value" id="crit-fis">—</div>
+        <div class="sub" id="crit-fis-sub">crítico só em 20 natural</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Dado de Crítico Mágico</div>
+        <div class="value" id="crit-mag">—</div>
+        <div class="sub" id="crit-mag-sub">crítico só em 20 natural</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Corrupção</div>
+        <div class="value"><span id="corr-current">0</span> / 10</div>
+        <div class="bar-outer bar-corr"><div class="bar-inner" id="corr-bar" style="width:0%;"></div></div>
+        <div class="track-row">
+          <button class="stepper-btn" onclick="adjustCounter('corr',-1)">−</button>
+          <button class="stepper-btn" onclick="adjustCounter('corr',1)">+</button>
+          <span class="sub" id="corr-type"></span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Integridade da Alma</div>
+        <div class="value"><span id="soul-current">5</span> / <span id="soul-max">5</span></div>
+        <div class="bar-outer bar-soul"><div class="bar-inner" id="soul-bar" style="width:100%;"></div></div>
+        <div class="track-row">
+          <button class="stepper-btn" onclick="adjustCurrent('soul',-1)">−</button>
+          <button class="stepper-btn" onclick="adjustCurrent('soul',1)">+</button>
+          <span class="sub">0 = risco de virar Morto sem Caminho</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2><span class="bar"></span>Perícias</h2>
+    <div class="pool-note" style="margin-bottom:10px;">Pontos de treino disponíveis: <b id="train-pool-remaining">4</b> / <span id="train-pool-total">4</span> (máx. +2 por perícia vindo só do treino)</div>
+    <table class="skills">
+      <thead>
+        <tr><th style="width:26%">Perícia</th><th>Atributo</th><th>Raça</th><th>Profissão</th><th>Treino</th><th>Total</th></tr>
+      </thead>
+      <tbody id="skills-body"></tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2><span class="bar"></span>Bênçãos Divinas Conhecidas</h2>
+    <div id="bless-list"></div>
+    <button class="add-btn" onclick="addBlessingRow()">+ Adicionar Bênção</button>
+    <div class="hint">Consulte a tabela completa em "Bênçãos Divinas" para valores de Tier/Custo/Efeito por deus.</div>
+  </div>
+
+  <div class="panel">
+    <h2><span class="bar"></span>Inventário &amp; Anotações</h2>
+    <div class="grid grid-2">
+      <div class="field"><label>Inventário / Equipamento</label><textarea id="f-inventario" rows="4"></textarea></div>
+      <div class="field"><label>Vínculos / Anotações</label><textarea id="f-notas" rows="4"></textarea></div>
+    </div>
+  </div>
+
+  <footer>
+    Aetheris — Sistema de Ficha · <button class="print-btn" onclick="window.print()">Imprimir / Salvar em PDF</button>
+  </footer>
+</div>
+
+<script>
+const ATTRS = ['forca','destreza','intelecto','vontade','fe'];
+const ATTR_LABEL = {forca:'Força',destreza:'Destreza',intelecto:'Intelecto',vontade:'Vontade',fe:'Fé'};
+const STAT_LABEL = {pv:'PV',pe:'PE',defesa:'Defesa',rescorr:'Resist. a Corrupção',integridade:'Integridade da Alma'};
+
+const SKILLS = [
+  {group:'Força', attr:'forca', items:['Atletismo','Escalada','Intimidação']},
+  {group:'Destreza', attr:'destreza', items:['Acrobacia','Reflexos','Furtividade','Prestidigitação','Pontaria','Iniciativa']},
+  {group:'Intelecto', attr:'intelecto', items:['Investigação','História','Religião','Ocultismo','Medicina','Alquimia','Engenharia','Estratégia']},
+  {group:'Vontade', attr:'vontade', items:['Intuição','Percepção','Concentração','Resistência Mental','Sobrevivência']},
+  {group:'Fé', attr:'fe', items:['Persuasão','Cura','Rituais']},
+];
+const ALL_SKILLS = SKILLS.flatMap(g=>g.items.map(name=>({name,attr:g.attr})));
+
+const RACES = {
+  'humanos':{
+    label:'Humanos',
+    tipo:'Raça adaptável', peculiaridade:'Adaptação', reputacao:'Frágeis individualmente, perigosos coletivamente',
+    descricao:'Não possuem a força natural dos Lupir, os sentidos dos Feliri, a visão aérea dos Avaris ou a resistência dos Reptilianos — mas compensam através de aprendizado, invenção, organização social e adaptação.',
+    cultura:'Variam muito por região: em Elyndar valorizam linhagem e fé; em Vharos tornam-se guerreiros; em Sahra\'Nür, comerciantes; em Veylan, estudiosos; em Lethra, sacerdotes e guias funerários.',
+    funcao:'Personagens versáteis, líderes, investigadores, mercenários e devotos de qualquer deus.',
+    passive:'Adaptação: escolha duas perícias quaisquer; cada uma recebe +1 permanente.',
+    active:'Segunda Chance — Reação, 1x por combate. Repita um ataque ou teste de defesa falho e use o novo resultado.',
+    skillBonus: 'free2',
+    statBonus: [],
+  },
+  'lupir':{
+    label:'Lupir',
+    tipo:'Raça lupina', peculiaridade:'Instinto de matilha', reputacao:'Leais, violentos quando provocados, excelentes caçadores',
+    descricao:'Possuem traços de lobo: orelhas, cauda, presas, olfato aguçado, força física e instinto social intenso. Nem todos são bestiais — muitos têm culturas complexas e códigos de honra fortes.',
+    cultura:'Valorizam grupo, lealdade e território. Traição é um dos crimes mais graves; um Lupir sem matilha é visto como incompleto ou exilado. Em Vharos, matilhas Lupir têm poder político real.',
+    funcao:'Guerreiros, caçadores, guardiões, rastreadores, líderes de grupo e personagens marcados por exílio.',
+    passive:'Instinto de Matilha: +1 em ataque e defesa lutando ao lado de um aliado próximo.',
+    active:'Uivo de Comando — Ação bônus, 1x por combate. Aliados próximos ganham vantagem no próximo ataque ou Iniciativa.',
+    skillBonus:[['Intimidação',1],['Atletismo',1]],
+    statBonus:[['pv',2]],
+  },
+  'feliri':{
+    label:'Feliri',
+    tipo:'Raça felina', peculiaridade:'Reflexo predatório', reputacao:'Ágeis, charmosos, furtivos e pouco confiáveis aos olhos de sociedades rígidas',
+    descricao:'Possuem olhos adaptados à baixa luz, cauda, orelhas, reflexos rápidos, flexibilidade corporal e grande precisão de movimento. Naturalmente bons em infiltração, performance e caça silenciosa.',
+    cultura:'Valorizam liberdade pessoal, elegância, oportunidade e independência. Diferente dos Lupir, não vivem presos a grupos fixos — sua identidade é individual.',
+    funcao:'Ladinos, espiões, duelistas, artistas, diplomatas, assassinos e personagens ambíguos.',
+    passive:'Reflexo Predatório: nunca é surpreendido completamente.',
+    active:'Fuga Felina — Reação, 1x por combate. Ao ser atacado corpo a corpo, reposiciona-se sem provocar oportunidade e ganha vantagem no contra-ataque.',
+    skillBonus:[['Furtividade',1],['Acrobacia',1]],
+    statBonus:[['defesa',1]],
+  },
+  'avaris':{
+    label:'Avaris',
+    tipo:'Raça aviária', peculiaridade:'Olhos do céu', reputacao:'Observadores, mensageiros, arqueiros e navegadores',
+    descricao:'Povos com traços de aves (falcões, corvos, corujas, águias, garças). Alguns possuem asas funcionais; outros têm penas ou ossos leves sem voo pleno — o que gera hierarquia interna na própria raça.',
+    cultura:'Valorizam visão, liberdade, altura e precisão. Em Elyndar são mensageiros e vigias; em Sahra\'Nür, navegadores; em Tsukihana, arqueiros e guardiões de templos.',
+    funcao:'Arqueiros, mensageiros, exploradores, pilotos, vigias, sacerdotes celestes e batedores.',
+    passive:'Olhos do Céu: vantagem em Percepção à distância ou em locais altos.',
+    active:'Arremetida Aérea — Ação padrão, 1x por combate. Move-se por cima de obstáculos e ganha vantagem no próximo ataque à distância.',
+    skillBonus:[['Pontaria',1],['Percepção',1]],
+    statBonus:[['defesa',1]],
+  },
+  'reptilianos':{
+    label:'Reptilianos',
+    tipo:'Raça reptiliana', peculiaridade:'Sangue frio', reputacao:'Pacientes, resistentes, calculistas e ameaçadores',
+    descricao:'Possuem traços de lagartos, serpentes ou crocodilos: escamas, olhos fendidos, pele resistente. São resistentes a calor, venenos e medo comum.',
+    cultura:'Valorizam paciência, sobrevivência e eficiência — não costumam agir por impulso, observando por longos períodos antes de decidir. Sofrem preconceito em Elyndar por associação simbólica com Apep.',
+    funcao:'Guardiões, guerreiros defensivos, caçadores, mercadores de deserto, assassinos pacientes e sobreviventes.',
+    passive:'Sangue Frio: resistência a medo/intimidação; imune a calor extremo.',
+    active:'Postura Imóvel — Ação padrão, recarrega ao ficar parado 1 turno. Ganha resistência a um tipo de dano físico e vantagem em defesa até o próximo turno.',
+    skillBonus:[['Resistência Mental',1],['Intimidação',1]],
+    statBonus:[['rescorr',2]],
+  },
+  'veylans':{
+    label:'Veylans',
+    tipo:'Raça mentalista/disciplinada', peculiaridade:'Disciplina mental', reputacao:'Frios, inteligentes, controladores e difíceis de manipular',
+    descricao:'Marcados por autocontrole, raciocínio lógico e resistência psicológica. Postura rígida, olhar analítico e marcas culturais geométricas em roupas ou tatuagens.',
+    cultura:'Valorizam razão acima de emoção; desde cedo aprendem a controlar medo, raiva e desejo. Falhar emocionalmente em público é visto como fraqueza social em Veylan Nexus.',
+    funcao:'Estudiosos, estrategistas, magos de bênção intelectual, investigadores, diplomatas frios e personagens que lutam contra repressão emocional.',
+    passive:'Disciplina Mental: vantagem em Resistência Mental contra possessão/manipulação/corrupção.',
+    active:'Cálculo Perfeito — Reação, 1x por combate. Trate um ataque ou teste de Intelecto falho como sucesso.',
+    skillBonus:[['Estratégia',1],['Concentração',1]],
+    statBonus:[['integridade',1]],
+  },
+  'ethereals':{
+    label:'Ethereals',
+    tipo:'Raça parcialmente espiritual', peculiaridade:'Existência parcial', reputacao:'Misteriosos, frágeis, sensíveis às almas',
+    descricao:'Corpos parcialmente ligados ao plano espiritual — pele translúcida, brilho sutil, olhos opacos. Naturalmente sensíveis a almas, memórias e presenças espirituais.',
+    cultura:'Valorizam silêncio, memória e identidade. Respeitados em Lethra; em Elyndar podem ser vistos como instáveis. Perseguidos por inquisidores que confundem sensibilidade espiritual com corrupção.',
+    funcao:'Médiuns, guias espirituais, sacerdotes, personagens assombrados, investigadores de almas e usuários de bênçãos ligadas à morte.',
+    passive:'Existência Parcial: sente almas/espíritos/mortes recentes num raio curto, sem teste.',
+    active:'Dissolver o Golpe — Reação, 1x por combate. Torna-se incorpóreo e ignora dano físico; contra inimigos espirituais, pode tocar e forçar teste de Resistência Mental.',
+    skillBonus:[['Ocultismo',1],['Intuição',1]],
+    statBonus:[['pe',2],['pv',-1]],
+  },
+  'ossideos':{
+    label:'Ossídeos',
+    tipo:'Mortos conscientes', peculiaridade:'Corpo sem dor', reputacao:'Assustadores, antigos, fiéis a promessas',
+    descricao:'Seres mortos ou semimortos que mantêm consciência — esqueletos, cadáveres secos, corpos mumificados ou estruturas ósseas sustentadas por energia espiritual. Nem todo Ossídeo é maligno: muitos existem por juramento, erro ritualístico, falha do Núcleo ou vontade própria.',
+    cultura:'Ligados a memória, dever e repetição — muitos mantêm a personalidade de quando eram vivos, desgastada pelo tempo. Ficaram mais comuns após o roubo do Núcleo das Almas.',
+    funcao:'Guardiões antigos, personagens amaldiçoados, mortos com missão inacabada e jogadores que querem vínculo forte com o tema da alma.',
+    passive:'Corpo sem Dor: imune a efeitos de dor; não precisa comer, beber ou dormir.',
+    active:'Vontade Além da Morte — Reação automática, 1x por sessão. Ao cair a 0 PV, continua agindo por mais uma rodada completa.',
+    skillBonus:[['Resistência Mental',1],['Ocultismo',1]],
+    statBonus:[['pv',2],['integridade',-1]],
+  },
+};
+
+const PROFESSIONS = {
+  'Elyndar':[
+    {name:'Sacerdote Solar', bonus:[['Religião',2],['Cura',2]]},
+    {name:'Escriba de Toth', bonus:[['Investigação',2],['História',2]]},
+    {name:'Inquisidor', bonus:[['Intuição',2],['Persuasão',2]]},
+    {name:'Guardião Celestial', bonus:[['Resistência Mental',2],['Atletismo',2]]},
+  ],
+  'Vharos':[
+    {name:'Gladiador', bonus:[['Atletismo',2],['Intimidação',2]]},
+    {name:'Mercenário', bonus:[['Iniciativa',2],['Percepção',2]]},
+    {name:'Ferreiro', bonus:[['Engenharia',2],['Atletismo',2]]},
+    {name:'Caçador de Bestas', bonus:[['Sobrevivência',2],['Pontaria',2]]},
+  ],
+  'Lethra Velada':[
+    {name:'Sacerdote Funerário', bonus:[['Religião',2],['Rituais',2]]},
+    {name:'Coveiro', bonus:[['Resistência Mental',2],['Medicina',2]]},
+    {name:'Exorcista', bonus:[['Ocultismo',2],['Intuição',2]]},
+    {name:'Guardião das Tumbas', bonus:[['Percepção',2],['Resistência Mental',2]]},
+  ],
+  'Veylan Nexus':[
+    {name:'Arquivista', bonus:[['Investigação',2],['História',2]]},
+    {name:'Estrategista', bonus:[['Estratégia',2],['Intuição',2]]},
+    {name:'Arcanista', bonus:[['Ocultismo',2],['Alquimia',2]]},
+    {name:'Astrônomo (Veylan)', bonus:[['Investigação',2],['Percepção',2]]},
+  ],
+  'Tsukihana':[
+    {name:'Samurai', bonus:[['Reflexos',2],['Intimidação',2]]},
+    {name:'Monge', bonus:[['Concentração',2]], attrBonus:[['vontade',2]]},
+    {name:'Ferreiro Cerimonial', bonus:[['Engenharia',2],['Religião',2]]},
+    {name:'Shinobi', bonus:[['Furtividade',2],['Prestidigitação',2]]},
+    {name:'Onmyoji', bonus:[['Ocultismo',2],['Rituais',2]]},
+  ],
+  "Sahra'Nür":[
+    {name:'Mercador', bonus:[['Persuasão',2],['Intuição',2]]},
+    {name:'Arqueólogo', bonus:[['Investigação',2],['História',2]]},
+    {name:"Astrônomo (Sahra'Nür)", bonus:[['Percepção',2],['Estratégia',2]]},
+    {name:'Navegador das Dunas', bonus:[['Sobrevivência',2],['Percepção',2]]},
+    {name:'Caçador de Relíquias', bonus:[['Furtividade',2],['Investigação',2]]},
+  ],
+};
+
+const state = {
+  level:1, xp:0,
+  attrs:{forca:0,destreza:0,intelecto:0,vontade:0,fe:0},
+  race:'', profession:'', humanChoice1:'', humanChoice2:'',
+  training:{},
+  pvOffset:0, peOffset:0, soulOffset:0,
+  corruption:0,
+};
+ALL_SKILLS.forEach(s=>state.training[s.name]=0);
+
+function attrPoolTotal(){ return 10 + (state.level-1)*2; }
+function trainPoolTotal(){ return 4 + (state.level-1)*1; }
+function attrCap(){ return 5 + Math.floor((state.level-1)/2); }
+function xpNeeded(level){ return 150*level; }
+
+function attrSpent(){ return ATTRS.reduce((s,a)=>s+state.attrs[a],0); }
+function trainSpent(){ return Object.values(state.training).reduce((a,b)=>a+b,0); }
+
+function professionData(){
+  for(const region in PROFESSIONS){
+    const found = PROFESSIONS[region].find(p=>p.name===state.profession);
+    if(found) return found;
+  }
+  return null;
+}
+function raceBonusFor(skillName){
+  if(!state.race) return 0;
+  const r = RACES[state.race];
+  if(r.skillBonus==='free2'){
+    let b=0;
+    if(state.humanChoice1===skillName) b+=1;
+    if(state.humanChoice2===skillName) b+=1;
+    return b;
+  }
+  const f = r.skillBonus.find(([n])=>n===skillName);
+  return f? f[1] : 0;
+}
+function profBonusFor(skillName){
+  const p = professionData();
+  if(!p) return 0;
+  const f = p.bonus.find(([n])=>n===skillName);
+  return f? f[1] : 0;
+}
+function profAttrBonus(attr){
+  const p = professionData();
+  if(!p || !p.attrBonus) return 0;
+  const f = p.attrBonus.find(([a])=>a===attr);
+  return f? f[1] : 0;
+}
+function totalAttr(attr){
+  return state.attrs[attr] + profAttrBonus(attr);
+}
+
+function critDie(value){
+  if(value>=8) return {die:'d4', confirm:4};
+  if(value>=5) return {die:'d6', confirm:6};
+  if(value>=3) return {die:'d8', confirm:8};
+  if(value>=1) return {die:'d10', confirm:10};
+  return {die:'—', confirm:null};
+}
+
+function buildProfReference(){
+  const wrap = document.getElementById('prof-reference');
+  let html = '';
+  for(const region in PROFESSIONS){
+    html += `<div class="prof-region"><h3>${region}</h3><div class="prof-grid">`;
+    PROFESSIONS[region].forEach(p=>{
+      const isSelected = state.profession === p.name;
+      let tags = p.bonus.map(([n,v])=>`<span class="tag">+${v} ${n}</span>`).join('');
+      if(p.attrBonus) tags += p.attrBonus.map(([a,v])=>`<span class="tag">+${v} ${ATTR_LABEL[a]} (atributo)</span>`).join('');
+      html += `<div class="prof-card${isSelected?' selected':''}"><div class="pname">${p.name}</div>${tags}</div>`;
+    });
+    html += `</div></div>`;
+  }
+  wrap.innerHTML = html;
+}
+
+function buildAttrGrid(){
+  const grid = document.getElementById('attr-grid');
+  grid.innerHTML='';
+  ATTRS.forEach(a=>{
+    const card=document.createElement('div');
+    card.className='attr-card';
+    card.innerHTML=`
+      <div class="name">${ATTR_LABEL[a]}</div>
+      <div class="row">
+        <button class="stepper-btn" onclick="stepAttr('${a}',-1)">−</button>
+        <div class="val" id="attr-val-${a}">0</div>
+        <button class="stepper-btn" onclick="stepAttr('${a}',1)">+</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function buildRaceSelect(){
+  const sel = document.getElementById('f-raca');
+  sel.innerHTML = '<option value="">— Selecione —</option>' +
+    Object.entries(RACES).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('');
+
+  const h1 = document.getElementById('human-choice-1');
+  const h2 = document.getElementById('human-choice-2');
+  const opts = '<option value="">—</option>' + ALL_SKILLS.map(s=>`<option value="${s.name}">${s.name}</option>`).join('');
+  h1.innerHTML = opts; h2.innerHTML = opts;
+  h1.onchange = ()=>{state.humanChoice1=h1.value; recalc();};
+  h2.onchange = ()=>{state.humanChoice2=h2.value; recalc();};
+}
+
+function buildProfSelect(){
+  const sel = document.getElementById('f-profissao');
+  let html = '<option value="">— Selecione —</option>';
+  for(const region in PROFESSIONS){
+    html += `<optgroup label="${region}">`;
+    PROFESSIONS[region].forEach(p=>{
+      html += `<option value="${p.name}">${p.name}</option>`;
+    });
+    html += `</optgroup>`;
+  }
+  sel.innerHTML = html;
+}
+
+function buildSkillsTable(){
+  const body = document.getElementById('skills-body');
+  body.innerHTML='';
+  SKILLS.forEach(group=>{
+    const tr = document.createElement('tr');
+    tr.className='group-row';
+    tr.innerHTML = `<td colspan="6">${group.group}</td>`;
+    body.appendChild(tr);
+    group.items.forEach(name=>{
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td class="skill-name">${name}</td>
+        <td class="mini-disp" id="sk-attr-${cssId(name)}">0</td>
+        <td class="mini-disp" id="sk-race-${cssId(name)}">+0</td>
+        <td class="mini-disp" id="sk-prof-${cssId(name)}">+0</td>
+        <td>
+          <div class="train-controls">
+            <button class="stepper-btn" onclick="stepTrain('${name}',-1)">−</button>
+            <span class="train-val" id="sk-train-${cssId(name)}">0</span>
+            <button class="stepper-btn" onclick="stepTrain('${name}',1)">+</button>
+          </div>
+        </td>
+        <td><span class="total-pill" id="sk-total-${cssId(name)}">0</span></td>
+      `;
+      body.appendChild(row);
+    });
+  });
+}
+function cssId(name){ return name.toLowerCase().replace(/[^a-z0-9]+/g,'-'); }
+
+function stepAttr(attr, dir){
+  const next = state.attrs[attr] + dir;
+  if(next < -1) return;
+  if(dir>0){
+    if(attrSpent()+1 > attrPoolTotal()) return;
+    if(next > attrCap()) return;
+  }
+  state.attrs[attr] = next;
+  recalc();
+}
+function stepTrain(name, dir){
+  const next = state.training[name] + dir;
+  if(next < 0) return;
+  if(next > 2) return;
+  if(dir>0 && trainSpent()+1 > trainPoolTotal()) return;
+  state.training[name] = next;
+  recalc();
+}
+function onRaceChange(){
+  state.race = document.getElementById('f-raca').value;
+  document.getElementById('human-choices').style.display = state.race==='humanos' ? 'grid' : 'none';
+  recalc();
+}
+function adjustCurrent(kind, dir){
+  if(kind==='pv') state.pvOffset = Math.max(0, Math.min(pvMax(), state.pvOffset - dir));
+  if(kind==='pe') state.peOffset = Math.max(0, Math.min(peMax(), state.peOffset - dir));
+  if(kind==='soul') state.soulOffset = Math.max(0, Math.min(soulMax(), state.soulOffset - dir));
+  recalc();
+}
+function adjustCounter(kind, dir){
+  if(kind==='corr') state.corruption = Math.max(0, Math.min(10, state.corruption + dir));
+  recalc();
+}
+function levelUp(){
+  const needed = xpNeeded(state.level);
+  if(state.xp < needed) return;
+  state.xp -= needed;
+  state.level += 1;
+  document.getElementById('xp-current').value = state.xp;
+  recalc();
+}
+function addBlessingRow(data){
+  data = data || {};
+  const wrap = document.getElementById('bless-list');
+  const row = document.createElement('div');
+  row.className='bless-row';
+  row.innerHTML = `
+    <div class="field"><label>Bênção</label><input type="text" class="b-nome" placeholder="Nome da bênção" value="${data.nome||''}"></div>
+    <div class="field"><label>Deus</label><input type="text" class="b-deus" placeholder="Ex: Montus" value="${data.deus||''}"></div>
+    <div class="field"><label>Tier</label>
+      <select class="b-tier" onchange="this.parentElement.nextElementSibling.querySelector('input').value = this.value==='Menor'?2:this.value==='Intermediária'?4:this.value==='Maior'?6:''">
+        <option value="">—</option><option ${data.tier==='Menor'?'selected':''}>Menor</option><option ${data.tier==='Intermediária'?'selected':''}>Intermediária</option><option ${data.tier==='Maior'?'selected':''}>Maior</option>
+      </select>
+    </div>
+    <div class="field"><label>Custo PE</label><input type="number" class="b-custo" min="0" value="${data.custo!=null?data.custo:''}"></div>
+    <div class="field"><label>Efeito</label><input type="text" class="b-efeito" placeholder="Efeito mecânico resumido" value="${data.efeito||''}"></div>
+    <button class="remove-btn" onclick="this.parentElement.remove()">×</button>
+  `;
+  wrap.appendChild(row);
+}
+function clearBlessingRows(){
+  document.getElementById('bless-list').innerHTML = '';
+}
+function collectBlessings(){
+  return Array.from(document.querySelectorAll('#bless-list .bless-row')).map(row=>({
+    nome: row.querySelector('.b-nome').value,
+    deus: row.querySelector('.b-deus').value,
+    tier: row.querySelector('.b-tier').value,
+    custo: row.querySelector('.b-custo').value,
+    efeito: row.querySelector('.b-efeito').value,
+  }));
+}
+
+function raceStatBonus(key){
+  if(!state.race || !RACES[state.race] || !RACES[state.race].statBonus) return 0;
+  const f = RACES[state.race].statBonus.find(([k])=>k===key);
+  return f ? f[1] : 0;
+}
+
+function pvMax(){ return 10 + totalAttr('vontade')*3 + totalAttr('forca')*1 + (state.level-1)*2 + raceStatBonus('pv'); }
+function peMax(){ return 8 + totalAttr('fe')*3 + totalAttr('intelecto')*1 + (state.level-1)*1 + raceStatBonus('pe'); }
+function soulMax(){ return 5 + Math.floor(totalAttr('fe')/2) + raceStatBonus('integridade'); }
+function defesaVal(){ return 10 + totalAttr('destreza')*2 + raceStatBonus('defesa'); }
+
+function recalc(){
+  const pool = attrPoolTotal();
+  document.getElementById('attr-pool-total').textContent = pool;
+  document.getElementById('attr-pool-remaining').textContent = pool - attrSpent();
+  document.getElementById('attr-cap').textContent = attrCap();
+  ATTRS.forEach(a=>{
+    const el = document.getElementById('attr-val-'+a);
+    if(el) el.textContent = state.attrs[a];
+  });
+
+  const raceLore = document.getElementById('race-lore');
+  if(state.race && RACES[state.race]){
+    const r = RACES[state.race];
+    raceLore.innerHTML = `
+      <div style="margin-bottom:8px;">
+        <span class="tag">${r.tipo}</span><span class="tag">${r.peculiaridade}</span>
+      </div>
+      <div style="margin-bottom:8px;"><b>Reputação:</b> ${r.reputacao}</div>
+      <div style="margin-bottom:8px;">${r.descricao}</div>
+      <div style="margin-bottom:8px;"><b>Cultura:</b> ${r.cultura}</div>
+      <div style="margin-bottom:8px;"><b>Função narrativa:</b> ${r.funcao}</div>
+      <div style="margin-bottom:8px;"><b>Passiva:</b> ${r.passive}</div>
+      <div style="margin-bottom:8px;"><b>Ativa (combate):</b> ${r.active}</div>
+      ${r.skillBonus!=='free2' ? `<div style="margin-bottom:6px;">${r.skillBonus.map(([n,v])=>`<span class="tag">+${v} ${n}</span>`).join('')}</div>` : `<div style="margin-bottom:6px;"><span class="tag">Escolha 2 perícias +1</span></div>`}
+      ${(r.statBonus&&r.statBonus.length) ? `<div><b>Bônus de status:</b> ${r.statBonus.map(([k,v])=>`<span class="tag">${v>0?'+':''}${v} ${STAT_LABEL[k]}</span>`).join('')}</div>` : ''}
+    `;
+  } else {
+    raceLore.innerHTML = 'Selecione uma raça para ver descrição, cultura, habilidades e bônus.';
+  }
+
+  buildProfReference();
+
+  const profLore = document.getElementById('prof-lore');
+  const p = professionData();
+  if(p){
+    let tags = p.bonus.map(([n,v])=>`<span class="tag">+${v} ${n}</span>`).join('');
+    if(p.attrBonus) tags += p.attrBonus.map(([a,v])=>`<span class="tag">+${v} ${ATTR_LABEL[a]} (atributo)</span>`).join('');
+    profLore.innerHTML = `<b>${p.name}:</b><div style="margin-top:6px;">${tags}</div>`;
+  } else {
+    profLore.innerHTML = 'Selecione uma profissão para ver os bônus.';
+  }
+
+  ALL_SKILLS.forEach(s=>{
+    const id = cssId(s.name);
+    const attrVal = totalAttr(s.attr);
+    const raceVal = raceBonusFor(s.name);
+    const profVal = profBonusFor(s.name);
+    const trainVal = state.training[s.name];
+    document.getElementById('sk-attr-'+id).textContent = attrVal;
+    document.getElementById('sk-race-'+id).textContent = '+'+raceVal;
+    document.getElementById('sk-prof-'+id).textContent = '+'+profVal;
+    document.getElementById('sk-train-'+id).textContent = trainVal;
+    document.getElementById('sk-total-'+id).textContent = attrVal+raceVal+profVal+trainVal;
+  });
+  document.getElementById('train-pool-total').textContent = trainPoolTotal();
+  document.getElementById('train-pool-remaining').textContent = trainPoolTotal() - trainSpent();
+
+  const pvmax = pvMax(), pemax = peMax(), soulmax = soulMax();
+  state.pvOffset = Math.min(state.pvOffset, pvmax);
+  state.peOffset = Math.min(state.peOffset, pemax);
+  state.soulOffset = Math.min(state.soulOffset, soulmax);
+  const pvCur = pvmax - state.pvOffset, peCur = pemax - state.peOffset, soulCur = soulmax - state.soulOffset;
+
+  document.getElementById('pv-max').textContent = pvmax;
+  document.getElementById('pv-current').textContent = pvCur;
+  document.getElementById('pv-bar').style.width = (pvCur/pvmax*100)+'%';
+
+  document.getElementById('pe-max').textContent = pemax;
+  document.getElementById('pe-current').textContent = peCur;
+  document.getElementById('pe-bar').style.width = (peCur/pemax*100)+'%';
+
+  document.getElementById('soul-max').textContent = soulmax;
+  document.getElementById('soul-current').textContent = soulCur;
+  document.getElementById('soul-bar').style.width = (soulCur/soulmax*100)+'%';
+
+  document.getElementById('stat-defesa').textContent = defesaVal();
+  document.getElementById('stat-rescorr').textContent = totalAttr('vontade') + raceStatBonus('rescorr');
+
+  const cf = critDie(totalAttr('destreza'));
+  document.getElementById('crit-fis').textContent = cf.die;
+  document.getElementById('crit-fis-sub').textContent = cf.confirm ? `confirma crítico em ${cf.confirm}` : 'crítico só em 20 natural';
+
+  const cm = critDie(totalAttr('intelecto'));
+  document.getElementById('crit-mag').textContent = cm.die;
+  document.getElementById('crit-mag-sub').textContent = cm.confirm ? `confirma crítico em ${cm.confirm}` : 'crítico só em 20 natural';
+
+  document.getElementById('corr-current').textContent = state.corruption;
+  document.getElementById('corr-bar').style.width = (state.corruption/10*100)+'%';
+  let corrType = '';
+  if(state.corruption>=9) corrType='Limiar 9: corrupção severa ativa';
+  else if(state.corruption>=6) corrType='Limiar 6: corrupção ativa';
+  else if(state.corruption>=3) corrType='Limiar 3: corrupção leve ativa';
+  document.getElementById('corr-type').textContent = corrType;
+
+  document.getElementById('level-badge').textContent = state.level;
+  const needed = xpNeeded(state.level);
+  document.getElementById('xp-needed').textContent = needed;
+  document.getElementById('xp-bar').style.width = Math.min(100,(state.xp/needed*100))+'%';
+  document.getElementById('level-up-btn').disabled = state.xp < needed;
+  document.getElementById('level-gain-hint').innerHTML =
+    `No próximo nível: <b>+2 pontos de atributo</b>, <b>+1 ponto de treino</b>, <b>+2 PV máx</b> e <b>+1 PE máx</b> automaticamente. Precisa de <b>${needed} XP</b> acumulado para subir.`;
+}
+
+/* ---------------- AUTENTICAÇÃO ---------------- */
+let currentSheetId = null; // null = ficha nova ainda não salva no servidor
+
+async function api(path, options){
+  const res = await fetch(path, Object.assign({headers:{'Content-Type':'application/json'}}, options||{}));
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error || 'Erro na requisição');
+  return data;
+}
+
+async function checkSession(){
+  try{
+    const me = await api('/api/me');
+    showApp(me.username);
+  }catch(e){
+    document.getElementById('auth-overlay').style.display = 'flex';
+    document.getElementById('app-content').style.display = 'none';
+  }
+}
+
+function showApp(username){
+  document.getElementById('auth-overlay').style.display = 'none';
+  document.getElementById('app-content').style.display = 'block';
+  document.getElementById('whoami').textContent = username;
+  refreshSheetDropdown();
+}
+
+async function doLogin(){
+  const username = document.getElementById('auth-username').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const statusEl = document.getElementById('auth-status');
+  try{
+    const r = await api('/api/login', {method:'POST', body: JSON.stringify({username, password})});
+    statusEl.style.color = 'var(--muted)';
+    showApp(r.username);
+  }catch(e){
+    statusEl.style.color = '#e3a1ab';
+    statusEl.textContent = e.message;
+  }
+}
+
+async function doRegister(){
+  const username = document.getElementById('auth-username').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const statusEl = document.getElementById('auth-status');
+  try{
+    const r = await api('/api/register', {method:'POST', body: JSON.stringify({username, password})});
+    statusEl.style.color = 'var(--muted)';
+    showApp(r.username);
+  }catch(e){
+    statusEl.style.color = '#e3a1ab';
+    statusEl.textContent = e.message;
+  }
+}
+
+async function doLogout(){
+  await api('/api/logout', {method:'POST'});
+  currentSheetId = null;
+  document.getElementById('auth-username').value = '';
+  document.getElementById('auth-password').value = '';
+  document.getElementById('auth-overlay').style.display = 'flex';
+  document.getElementById('app-content').style.display = 'none';
+}
+
+/* ---------------- SAVE / LOAD (API + banco de dados) ---------------- */
+function buildSheetData(){
+  return {
+    identity:{
+      nome: document.getElementById('f-nome').value,
+      jogador: document.getElementById('f-jogador').value,
+      regiao: document.getElementById('f-regiao').value,
+      deus: document.getElementById('f-deus').value,
+      promessa: document.getElementById('f-promessa').value,
+    },
+    state: state,
+    inventario: document.getElementById('f-inventario').value,
+    notas: document.getElementById('f-notas').value,
+    blessings: collectBlessings(),
+  };
+}
+
+function applySheetData(data){
+  document.getElementById('f-nome').value = (data.identity && data.identity.nome) || '';
+  document.getElementById('f-jogador').value = (data.identity && data.identity.jogador) || '';
+  document.getElementById('f-regiao').value = (data.identity && data.identity.regiao) || '';
+  document.getElementById('f-deus').value = (data.identity && data.identity.deus) || '';
+  document.getElementById('f-promessa').value = (data.identity && data.identity.promessa) || '';
+  document.getElementById('f-inventario').value = data.inventario || '';
+  document.getElementById('f-notas').value = data.notas || '';
+
+  Object.assign(state, data.state);
+
+  document.getElementById('f-raca').value = state.race || '';
+  document.getElementById('human-choices').style.display = state.race==='humanos' ? 'grid' : 'none';
+  document.getElementById('human-choice-1').value = state.humanChoice1 || '';
+  document.getElementById('human-choice-2').value = state.humanChoice2 || '';
+  document.getElementById('f-profissao').value = state.profession || '';
+  document.getElementById('xp-current').value = state.xp || 0;
+
+  clearBlessingRows();
+  (data.blessings||[]).forEach(b=>addBlessingRow(b));
+
+  recalc();
+}
+
+async function refreshSheetDropdown(selectId){
+  const sel = document.getElementById('sheet-select');
+  try{
+    const rows = await api('/api/sheets');
+    sel.innerHTML = rows.length ? '' : '<option value="">— nenhuma salva —</option>';
+    rows.forEach(r=>{
+      const opt = document.createElement('option');
+      opt.value = r.id; opt.textContent = r.name;
+      sel.appendChild(opt);
+    });
+    if(selectId) sel.value = selectId;
+  }catch(e){
+    sel.innerHTML = '<option value="">— faça login pra ver suas fichas —</option>';
+  }
+}
+
+async function saveCurrentSheet(){
+  let name = document.getElementById('save-name').value.trim();
+  if(!name) name = document.getElementById('f-nome').value.trim();
+  if(!name){
+    setStatus('Digite um nome pra salvar a ficha.', true);
+    return;
+  }
+  const data = buildSheetData();
+  try{
+    if(currentSheetId){
+      await api('/api/sheets/'+currentSheetId, {method:'PUT', body: JSON.stringify({name, data})});
+    }else{
+      const r = await api('/api/sheets', {method:'POST', body: JSON.stringify({name, data})});
+      currentSheetId = r.id;
+    }
+    await refreshSheetDropdown(currentSheetId);
+    setStatus('Ficha "'+name+'" salva na sua conta.');
+  }catch(e){
+    setStatus('Não foi possível salvar: '+e.message, true);
+  }
+}
+
+async function loadSelectedSheet(){
+  const id = document.getElementById('sheet-select').value;
+  if(!id){ setStatus('Selecione uma ficha salva pra carregar.', true); return; }
+  try{
+    const r = await api('/api/sheets/'+id);
+    applySheetData(r.data);
+    currentSheetId = r.id;
+    document.getElementById('save-name').value = r.name;
+    setStatus('Ficha "'+r.name+'" carregada.');
+  }catch(e){
+    setStatus('Não foi possível carregar: '+e.message, true);
+  }
+}
+
+async function deleteSelectedSheet(){
+  const id = document.getElementById('sheet-select').value;
+  if(!id){ setStatus('Selecione uma ficha pra excluir.', true); return; }
+  try{
+    await api('/api/sheets/'+id, {method:'DELETE'});
+    if(String(currentSheetId)===String(id)) currentSheetId = null;
+    await refreshSheetDropdown();
+    setStatus('Ficha excluída.');
+  }catch(e){
+    setStatus('Não foi possível excluir: '+e.message, true);
+  }
+}
+
+function exportSheet(){
+  const data = buildSheetData();
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const name = (document.getElementById('f-nome').value || 'ficha').replace(/[^a-z0-9]+/gi,'_');
+  a.href = url; a.download = 'aetheris_'+name+'.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  setStatus('Ficha exportada — pode servir de backup local ou ser importada em outra conta.');
+}
+
+function importSheet(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const data = JSON.parse(e.target.result);
+      applySheetData(data);
+      currentSheetId = null; // importar sempre cria uma ficha nova ao salvar
+      setStatus('Ficha importada. Clique em "Salvar" pra guardá-la na sua conta.');
+    }catch(err){
+      setStatus('Arquivo inválido — não foi possível importar.', true);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function setStatus(msg, isError){
+  const el = document.getElementById('save-status');
+  el.textContent = msg;
+  el.style.color = isError ? '#e3a1ab' : 'var(--muted)';
+}
+
+document.getElementById('xp-current').addEventListener('input', e=>{
+  state.xp = Math.max(0, parseInt(e.target.value)||0);
+  recalc();
+});
+
+buildAttrGrid();
+buildRaceSelect();
+buildProfSelect();
+buildSkillsTable();
+checkSession();
+recalc();
+</script>
+</body>
+</html>
