@@ -198,9 +198,15 @@ table.skills tr.group-row td{
 .train-val{min-width:16px;text-align:center;}
 
 .bless-row{
-  display:grid;grid-template-columns:1.3fr 1fr .8fr .6fr 1.6fr auto;gap:8px;align-items:end;margin-bottom:10px;
+  display:grid;grid-template-columns:1fr 1.5fr 2fr auto;gap:8px;align-items:start;margin-bottom:10px;
 }
-@media(max-width:800px){.bless-row{grid-template-columns:1fr 1fr;}}
+@media(max-width:800px){.bless-row{grid-template-columns:1fr 1fr;} .bless-row>*:nth-child(3){grid-column:1/-1;}}
+.bless-info{
+  background:#15111d;border:1px solid var(--line);border-radius:6px;padding:6px 10px;
+  font-size:11.5px;color:var(--muted);min-height:34px;
+}
+.bless-info .bless-tipo{display:block;text-transform:uppercase;font-size:9.5px;letter-spacing:.05em;color:var(--gold-dim);margin-bottom:2px;}
+.bless-info .bless-custo{display:block;margin-top:3px;font-weight:600;color:var(--gold);}
 
 .power-card{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:16px;}
 .power-card-head{display:flex;gap:10px;align-items:end;margin-bottom:14px;flex-wrap:wrap;}
@@ -276,7 +282,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px;}
   <div class="header">
     <div class="eyebrow">Livro de Personagem</div>
     <h1>AETHERIS</h1>
-    <p>Ficha interativa — atributos, perícias e status</p>
+    <p>Ficha interativa — atributos, perícias e status calculados automaticamente</p>
     <div style="margin-top:10px;font-size:12px;color:var(--muted);">
       Logado como <b id="whoami" style="color:var(--gold);"></b> ·
       <button class="print-btn" id="master-toggle-btn" style="padding:3px 10px;display:none;" onclick="toggleMasterPanel()">Painel do Mestre</button>
@@ -301,7 +307,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px;}
   </div>
 
   <div class="panel" id="save-panel">
-    <h2><span class="bar"></span>Suas Fichas</h2>
+    <h2><span class="bar"></span>Fichas Salvas (na sua conta)</h2>
     <div class="grid grid-3 save-controls" style="align-items:end;">
       <div class="field">
         <label>Nome pra salvar</label>
@@ -473,11 +479,11 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px;}
     <h2><span class="bar"></span>Bênçãos Divinas Conhecidas</h2>
     <div id="bless-list"></div>
     <button class="add-btn" onclick="addBlessingRow()">+ Adicionar Bênção</button>
-    <div class="hint">Consulte a tabela completa em "Bênçãos Divinas" para valores de Tier/Custo/Efeito por deus.</div>
+    <div class="hint">Escolha o deus e a bênção — os detalhes (tipo, efeito e custo) são preenchidos automaticamente, direto da lore. Deuses de culto proibido (como Apep) não têm bênçãos jogáveis.</div>
   </div>
 
   <div class="panel">
-    <h2><span class="bar"></span>Poderes Únicos da Alma</h2>
+    <h2><span class="bar"></span>Poderes Mágicos Personalizados</h2>
     <div class="hint" style="margin-bottom:14px;">
       Monte seus próprios poderes combinando um <b>tipo de dano</b>, <b>debuffs/efeitos</b> e <b>melhorias</b>.
       Limites por nível — <b>Comum</b>: 1 dano, 1 efeito, sem melhorias · <b>Intermediário</b>: 2 danos, 2 efeitos, 1 melhoria · <b>Avançado</b>: 3 danos, 3 efeitos, 2 melhorias.
@@ -570,6 +576,915 @@ const POWER_TIER_LIMITS = {
   'Intermediário': {dano:2, efeito:2, melhoria:1},
   'Avançado': {dano:3, efeito:3, melhoria:2},
 };
+
+const BLESSINGS_DB = {
+  "Toth": {
+    "grupo": "Deuses Primordiais",
+    "skills": [
+      {
+        "nome": "Leitura de Línguas Antigas",
+        "tipo": "Utilitário",
+        "efeito": "Compreende qualquer texto, fala ou runa antiga/morta por 10 minutos.",
+        "custo": 2,
+        "base": false
+      },
+      {
+        "nome": "Criação de Selos",
+        "tipo": "Utilitário",
+        "efeito": "Sela uma porta, objeto ou item por algumas horas; abrir à força exige um teste de Força ou Intelecto.",
+        "custo": 3,
+        "base": false
+      },
+      {
+        "nome": "Runas de Proteção",
+        "tipo": "Defensivo",
+        "efeito": "Escudo mágico: reduz pela metade o próximo dano recebido.",
+        "custo": 5,
+        "base": false
+      },
+      {
+        "nome": "Análise de Fraquezas",
+        "tipo": "Utilitário",
+        "efeito": "Revela a maior fraqueza física ou mágica de um alvo observado por 1 turno.",
+        "custo": 3,
+        "base": false
+      },
+      {
+        "nome": "Barreiras Geométricas",
+        "tipo": "Defensivo",
+        "efeito": "Cria uma parede de energia rúnica que bloqueia passagem física por 2 turnos.",
+        "custo": 5,
+        "base": false
+      },
+      {
+        "nome": "Criação Temporária de Objetos",
+        "tipo": "Utilitário",
+        "efeito": "Materializa um objeto simples e inanimado (chave, corda, ferramenta) que se desfaz em 10 minutos.",
+        "custo": 4,
+        "base": false
+      }
+    ]
+  },
+  "Isis": {
+    "grupo": "Deuses Primordiais",
+    "skills": [
+      {
+        "nome": "Acalmar Espíritos",
+        "tipo": "Suporte / Controle",
+        "efeito": "Aplica Fraqueza (-25% de dano, 4 turnos) em um espírito ou entidade agressiva, acalmando-a.",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Detectar Almas Perdidas",
+        "tipo": "Utilitário",
+        "efeito": "Percebe presenças espirituais num raio de 10 metros.",
+        "custo": 2,
+        "base": false
+      },
+      {
+        "nome": "Proteger Contra Possessão",
+        "tipo": "Defensivo",
+        "efeito": "Concede resistência total a possessão por uma cena.",
+        "custo": 6,
+        "base": false
+      },
+      {
+        "nome": "Conduzir Mortos",
+        "tipo": "Utilitário",
+        "efeito": "Guia um espírito ao repouso, encerrando assombrações menores.",
+        "custo": 5,
+        "base": false
+      },
+      {
+        "nome": "Selar Cadáveres",
+        "tipo": "Utilitário",
+        "efeito": "Impede que um corpo seja reanimado ou profanado.",
+        "custo": 3,
+        "base": false
+      },
+      {
+        "nome": "Purificar Áreas de Luto",
+        "tipo": "Suporte",
+        "efeito": "Remove Corrupção acumulada em um local (não em criaturas) e acalma espíritos hostis nele.",
+        "custo": 6,
+        "base": false
+      }
+    ]
+  },
+  "Montus": {
+    "grupo": "Deuses Primordiais",
+    "skills": [
+      {
+        "nome": "Aumento de Força Física",
+        "tipo": "Melhoria",
+        "efeito": "+1d6 no próximo dano físico causado.",
+        "custo": 2,
+        "base": false
+      },
+      {
+        "nome": "Resistência Temporária",
+        "tipo": "Defensivo",
+        "efeito": "Reduz o dano recebido em 25% por 3 turnos.",
+        "custo": 5,
+        "base": false
+      },
+      {
+        "nome": "Recuperação em Combate",
+        "tipo": "Suporte",
+        "efeito": "Cura 1d6 de PV imediatamente, sem sair do combate.",
+        "custo": 6,
+        "base": false
+      },
+      {
+        "nome": "Golpes de Impacto",
+        "tipo": "Ofensivo",
+        "efeito": "Dano de Impacto: 1d10. Pode empurrar ou derrubar o alvo.",
+        "custo": 0,
+        "base": true
+      },
+      {
+        "nome": "Endurecimento do Corpo",
+        "tipo": "Defensivo",
+        "efeito": "Reduz pela metade a próxima fonte de dano de Corte ou Perfuração recebida.",
+        "custo": 5,
+        "base": false
+      },
+      {
+        "nome": "Presença Intimidante",
+        "tipo": "Controle",
+        "efeito": "Aplica Medo (-2 em ataques, 3 turnos) nos inimigos próximos.",
+        "custo": 3,
+        "base": false
+      }
+    ]
+  },
+  "Apep": {
+    "grupo": "Deuses Primordiais",
+    "skills": []
+  },
+  "Nyx": {
+    "grupo": "Deuses Celestiais e Regionais",
+    "skills": [
+      {
+        "nome": "Ocultação em Sombras",
+        "tipo": "Utilitário",
+        "efeito": "Torna o usuário indetectável visualmente por 2 turnos, desde que em penumbra.",
+        "custo": 5,
+        "base": false
+      },
+      {
+        "nome": "Sonhos Proféticos",
+        "tipo": "Utilitário",
+        "efeito": "Recebe uma visão parcial de um evento futuro próximo (a critério do mestre).",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Proteção Noturna",
+        "tipo": "Defensivo",
+        "efeito": "+2 na Defesa durante a noite ou em ambientes escuros, por uma cena.",
+        "custo": 3,
+        "base": false
+      },
+      {
+        "nome": "Silêncio Espiritual",
+        "tipo": "Controle",
+        "efeito": "Aplica Silêncio (não usa magia verbal, 2 turnos) em um alvo.",
+        "custo": 7,
+        "base": false
+      },
+      {
+        "nome": "Comunicação Onírica",
+        "tipo": "Utilitário",
+        "efeito": "Envia uma mensagem curta através dos sonhos de um aliado distante.",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Véus Contra Perseguição",
+        "tipo": "Utilitário",
+        "efeito": "Apaga rastros e sinais de passagem do grupo por algumas horas.",
+        "custo": 3,
+        "base": false
+      }
+    ]
+  },
+  "Hélio": {
+    "grupo": "Deuses Celestiais e Regionais",
+    "skills": [
+      {
+        "nome": "Luz Solar",
+        "tipo": "Ofensivo",
+        "efeito": "Dano de Luz/Sagrado: 1d8. Causa o dobro de dano em criaturas sombrias.",
+        "custo": 0,
+        "base": true
+      },
+      {
+        "nome": "Fogo Sagrado",
+        "tipo": "Ofensivo",
+        "efeito": "Dano de Fogo: 1d8. Pode causar Queimadura (1d6 por 3 turnos).",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Detecção de Mentiras",
+        "tipo": "Utilitário",
+        "efeito": "Sabe se a última frase dita por um alvo foi mentira.",
+        "custo": 3,
+        "base": false
+      },
+      {
+        "nome": "Revelação de Invisíveis",
+        "tipo": "Utilitário",
+        "efeito": "Torna visível qualquer coisa oculta ou disfarçada num raio de 10m por 1 turno.",
+        "custo": 5,
+        "base": false
+      },
+      {
+        "nome": "Purificação de Corrupção",
+        "tipo": "Suporte",
+        "efeito": "Remove 1 ponto de Corrupção de um alvo (uso limitado, a critério do mestre).",
+        "custo": 8,
+        "base": false
+      },
+      {
+        "nome": "Marca de Julgamento",
+        "tipo": "Controle",
+        "efeito": "Marca um alvo culpado; ele passa a receber +25% de dano de fontes sagradas por 4 turnos.",
+        "custo": 5,
+        "base": false
+      }
+    ]
+  },
+  "Zeus": {
+    "grupo": "Deuses Celestiais e Regionais",
+    "skills": [
+      {
+        "nome": "Relâmpagos",
+        "tipo": "Ofensivo",
+        "efeito": "Dano de Eletricidade: 1d10. Pode causar Choque (perde a reação, 1 turno).",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Trovões",
+        "tipo": "Ofensivo / Controle",
+        "efeito": "Dano de Som: 1d6. Pode causar Surdez (falha testes sonoros, 3 turnos).",
+        "custo": 3,
+        "base": false
+      },
+      {
+        "nome": "Imposição de Presença",
+        "tipo": "Controle",
+        "efeito": "Aplica Atordoamento (-50% ataque/defesa, 1 turno) em um alvo que falhe em resistir à autoridade de Zeus.",
+        "custo": 5,
+        "base": false
+      },
+      {
+        "nome": "Punição Contra Juramentos Quebrados",
+        "tipo": "Ofensivo",
+        "efeito": "Dano de Eletricidade: 1d10, dobrado contra quem quebrou um juramento na campanha.",
+        "custo": 0,
+        "base": true
+      },
+      {
+        "nome": "Resistência a Intimidação",
+        "tipo": "Defensivo",
+        "efeito": "Imunidade a efeitos de Medo e Pânico por uma cena.",
+        "custo": 5,
+        "base": false
+      }
+    ]
+  },
+  "Hera": {
+    "grupo": "Deuses Celestiais e Regionais",
+    "skills": [
+      {
+        "nome": "Proteção de Aliados Vinculados por Juramento",
+        "tipo": "Defensivo",
+        "efeito": "Concede um escudo mágico a um aliado juramentado, reduzindo o próximo dano que ele receber.",
+        "custo": 5,
+        "base": false
+      },
+      {
+        "nome": "Punição de Traidores",
+        "tipo": "Ofensivo",
+        "efeito": "Dano Psíquico: 1d6, dobrado contra quem traiu um juramento ou aliança.",
+        "custo": 0,
+        "base": true
+      },
+      {
+        "nome": "Fortalecimento de Pactos Familiares",
+        "tipo": "Suporte",
+        "efeito": "Concede +1d6 de bônus de dano ou defesa a todos os aliados de sangue ou juramento presentes na cena.",
+        "custo": 6,
+        "base": false
+      },
+      {
+        "nome": "Autoridade Social",
+        "tipo": "Utilitário",
+        "efeito": "Concede vantagem em testes sociais envolvendo hierarquia, nobreza ou etiqueta por uma cena.",
+        "custo": 3,
+        "base": false
+      }
+    ]
+  },
+  "Atena": {
+    "grupo": "Deuses Celestiais e Regionais",
+    "skills": [
+      {
+        "nome": "Leitura de Padrões de Combate",
+        "tipo": "Utilitário",
+        "efeito": "Revela a próxima ação pretendida de um inimigo observado.",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Defesa Perfeita",
+        "tipo": "Defensivo",
+        "efeito": "Reflexão: devolve parte do próximo dano físico recebido ao atacante.",
+        "custo": 10,
+        "base": false
+      },
+      {
+        "nome": "Foco Mental",
+        "tipo": "Suporte",
+        "efeito": "Remove um efeito de Confusão ou Atordoamento de si mesmo ou de um aliado.",
+        "custo": 5,
+        "base": false
+      },
+      {
+        "nome": "Armas Guiadas por Estratégia",
+        "tipo": "Ofensivo",
+        "efeito": "Dano de Perfuração: 1d8. Ignora parte da armadura do alvo.",
+        "custo": 0,
+        "base": true
+      },
+      {
+        "nome": "Previsão Tática",
+        "tipo": "Utilitário",
+        "efeito": "Concede vantagem no primeiro ataque de uma batalha planejada com antecedência.",
+        "custo": 3,
+        "base": false
+      }
+    ]
+  },
+  "Ares": {
+    "grupo": "Deuses Celestiais e Regionais",
+    "skills": [
+      {
+        "nome": "Fúria de Batalha",
+        "tipo": "Suporte",
+        "efeito": "+1d6 de dano em todos os ataques físicos por 3 turnos.",
+        "custo": 5,
+        "base": false
+      },
+      {
+        "nome": "Dano Aumentado",
+        "tipo": "Melhoria",
+        "efeito": "+1d6 no próximo golpe físico.",
+        "custo": 2,
+        "base": false
+      },
+      {
+        "nome": "Resistência à Dor",
+        "tipo": "Defensivo",
+        "efeito": "Ignora penalidades de ferimentos graves por uma cena.",
+        "custo": 5,
+        "base": false
+      },
+      {
+        "nome": "Grito de Guerra",
+        "tipo": "Controle",
+        "efeito": "Aplica Medo (-2 em ataques, 3 turnos) em todos os inimigos próximos.",
+        "custo": 3,
+        "base": false
+      },
+      {
+        "nome": "Presença Aterradora",
+        "tipo": "Controle",
+        "efeito": "Aplica Terror (pode perder a ação, 2 turnos) em um único alvo.",
+        "custo": 6,
+        "base": false
+      }
+    ]
+  },
+  "Afrodite": {
+    "grupo": "Deuses Celestiais e Regionais",
+    "skills": [
+      {
+        "nome": "Encanto",
+        "tipo": "Controle",
+        "efeito": "Aplica Confusão (25% de chance de errar a ação, 3 turnos) em um alvo seduzido ou distraído.",
+        "custo": 6,
+        "base": false
+      },
+      {
+        "nome": "Manipulação Emocional",
+        "tipo": "Controle",
+        "efeito": "Aplica Fraqueza (-25% de dano, 4 turnos) em um alvo emocionalmente abalado.",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Presença Hipnótica",
+        "tipo": "Controle",
+        "efeito": "Um alvo fica incapaz de atacar Afrodite ou seus aliados diretamente por 1 turno.",
+        "custo": 8,
+        "base": false
+      },
+      {
+        "nome": "Disfarce Social",
+        "tipo": "Utilitário",
+        "efeito": "Altera temporariamente aparência e voz para se passar por outra pessoa por uma cena.",
+        "custo": 5,
+        "base": false
+      },
+      {
+        "nome": "Influência Sobre Desejo",
+        "tipo": "Utilitário",
+        "efeito": "Torna um NPC mais receptivo e favorável em uma negociação.",
+        "custo": 3,
+        "base": false
+      }
+    ]
+  },
+  "Apolo": {
+    "grupo": "Deuses Celestiais e Regionais",
+    "skills": [
+      {
+        "nome": "Cura Luminosa",
+        "tipo": "Suporte",
+        "efeito": "Cura 1d8 de PV.",
+        "custo": 6,
+        "base": false
+      },
+      {
+        "nome": "Música Encantada",
+        "tipo": "Controle",
+        "efeito": "Aplica Lentidão (-50% de movimento, 3 turnos) em inimigos que ouvem a melodia.",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Profecias",
+        "tipo": "Utilitário",
+        "efeito": "Recebe uma pista narrativa sobre o que está por vir (a critério do mestre).",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Dissipação de Doenças Espirituais",
+        "tipo": "Suporte",
+        "efeito": "Remove um efeito de Maldição, Corrupção ou doença mágica de um alvo.",
+        "custo": 7,
+        "base": false
+      },
+      {
+        "nome": "Inspiração Artística",
+        "tipo": "Suporte",
+        "efeito": "Concede vantagem no próximo teste de perícia de um aliado.",
+        "custo": 3,
+        "base": false
+      }
+    ]
+  },
+  "Ártemis": {
+    "grupo": "Deuses Celestiais e Regionais",
+    "skills": [
+      {
+        "nome": "Mira Perfeita",
+        "tipo": "Melhoria",
+        "efeito": "O próximo ataque à distância ignora a armadura do alvo.",
+        "custo": 5,
+        "base": false
+      },
+      {
+        "nome": "Rastreio",
+        "tipo": "Utilitário",
+        "efeito": "Encontra e segue o rastro de uma criatura ou pessoa específica.",
+        "custo": 3,
+        "base": false
+      },
+      {
+        "nome": "Silêncio",
+        "tipo": "Utilitário",
+        "efeito": "Movimento completamente silencioso por 3 turnos.",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Comunhão com Bestas",
+        "tipo": "Utilitário",
+        "efeito": "Comunica-se e acalma animais não-hostis.",
+        "custo": 3,
+        "base": false
+      },
+      {
+        "nome": "Proteção Contra Predadores",
+        "tipo": "Defensivo",
+        "efeito": "Bestas selvagens não-inteligentes evitam atacar o usuário por uma cena.",
+        "custo": 4,
+        "base": false
+      }
+    ]
+  },
+  "Hermes": {
+    "grupo": "Deuses Celestiais e Regionais",
+    "skills": [
+      {
+        "nome": "Velocidade",
+        "tipo": "Melhoria",
+        "efeito": "+50% de deslocamento por 3 turnos.",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Comunicação à Distância",
+        "tipo": "Utilitário",
+        "efeito": "Envia uma mensagem curta a um alvo conhecido, à distância.",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Travessia Segura",
+        "tipo": "Utilitário",
+        "efeito": "Garante passagem segura por terrenos perigosos (armadilhas, gelo fino etc.) por uma cena.",
+        "custo": 5,
+        "base": false
+      },
+      {
+        "nome": "Leitura de Rotas",
+        "tipo": "Utilitário",
+        "efeito": "Sempre sabe o caminho mais rápido entre dois pontos conhecidos.",
+        "custo": 2,
+        "base": false
+      },
+      {
+        "nome": "Furtividade",
+        "tipo": "Utilitário",
+        "efeito": "+2 em testes de furtividade e escapismo por uma cena.",
+        "custo": 3,
+        "base": false
+      }
+    ]
+  },
+  "Hades": {
+    "grupo": "Deuses Celestiais e Regionais",
+    "skills": [
+      {
+        "nome": "Comunicação com Mortos",
+        "tipo": "Utilitário",
+        "efeito": "Faz uma pergunta a um espírito ligado a um túmulo ou corpo.",
+        "custo": 6,
+        "base": false
+      },
+      {
+        "nome": "Proteção Contra Profanação",
+        "tipo": "Defensivo",
+        "efeito": "Protege um túmulo ou corpo contra invasão ou reanimação.",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Autoridade Sobre Tumbas",
+        "tipo": "Controle",
+        "efeito": "Mortos-vivos menores (sem inteligência) obedecem ordens simples por uma cena.",
+        "custo": 7,
+        "base": false
+      },
+      {
+        "nome": "Resistência Espiritual",
+        "tipo": "Defensivo",
+        "efeito": "+2 em Resistência à Corrupção por uma cena.",
+        "custo": 4,
+        "base": false
+      }
+    ]
+  },
+  "Poseidon": {
+    "grupo": "Deuses Celestiais e Regionais",
+    "skills": [
+      {
+        "nome": "Controle de Água",
+        "tipo": "Utilitário / Ofensivo",
+        "efeito": "Move ou molda uma quantidade de água próxima; se usado como ataque, causa 1d6 de dano de Impacto.",
+        "custo": 3,
+        "base": false
+      },
+      {
+        "nome": "Ondas Suspensas",
+        "tipo": "Ofensivo",
+        "efeito": "Dano de Impacto: 1d10. Pode empurrar ou derrubar o alvo.",
+        "custo": 0,
+        "base": true
+      },
+      {
+        "nome": "Tremores em Ilhas",
+        "tipo": "Ofensivo",
+        "efeito": "Dano de Impacto: 1d10 em área pequena (3m).",
+        "custo": 3,
+        "base": false
+      },
+      {
+        "nome": "Tempestades Marítimas",
+        "tipo": "Ofensivo",
+        "efeito": "Dano de Eletricidade: 1d10. Pode causar Choque (perde a reação, 1 turno).",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Respiração Submersa",
+        "tipo": "Utilitário",
+        "efeito": "Permite respirar debaixo d'água por uma cena.",
+        "custo": 3,
+        "base": false
+      }
+    ]
+  },
+  "Osíris": {
+    "grupo": "Deuses Celestiais e Regionais",
+    "skills": [
+      {
+        "nome": "Repouso Espiritual",
+        "tipo": "Suporte",
+        "efeito": "Acalma um espírito, encerrando hostilidade não-violenta.",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Restauração",
+        "tipo": "Suporte",
+        "efeito": "Cura 1d6 de PV ou remove uma condição negativa leve.",
+        "custo": 5,
+        "base": false
+      },
+      {
+        "nome": "Proteção Contra Mortos-Vivos",
+        "tipo": "Defensivo",
+        "efeito": "+2 na Defesa contra ataques de mortos-vivos por uma cena.",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Julgamento de Almas",
+        "tipo": "Utilitário",
+        "efeito": "Revela se as intenções de um alvo são genuinamente boas ou más.",
+        "custo": 5,
+        "base": false
+      },
+      {
+        "nome": "Renascimento Simbólico",
+        "tipo": "Suporte",
+        "efeito": "Uma vez por sessão, permite reverter o primeiro efeito de \"Morte sem Caminho\" recebido (a critério do mestre).",
+        "custo": 10,
+        "base": false
+      }
+    ]
+  },
+  "Anúbis": {
+    "grupo": "Deuses Celestiais e Regionais",
+    "skills": [
+      {
+        "nome": "Selar Cadáveres",
+        "tipo": "Utilitário",
+        "efeito": "Impede que um corpo seja reanimado ou profanado.",
+        "custo": 3,
+        "base": false
+      },
+      {
+        "nome": "Detectar Almas Corrompidas",
+        "tipo": "Utilitário",
+        "efeito": "Percebe presença de Corrupção em uma alma num raio de 10m.",
+        "custo": 3,
+        "base": false
+      },
+      {
+        "nome": "Proteger Tumbas",
+        "tipo": "Defensivo",
+        "efeito": "Torna um túmulo ou local funerário resistente a invasão.",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Impedir Possessões",
+        "tipo": "Defensivo",
+        "efeito": "Concede resistência total a possessão por uma cena.",
+        "custo": 6,
+        "base": false
+      },
+      {
+        "nome": "Pesar Culpa Espiritual",
+        "tipo": "Utilitário",
+        "efeito": "Revela o maior peso moral (culpa) que um alvo carrega.",
+        "custo": 4,
+        "base": false
+      }
+    ]
+  },
+  "Rá": {
+    "grupo": "Deuses Celestiais e Regionais",
+    "skills": [
+      {
+        "nome": "Fogo Solar",
+        "tipo": "Ofensivo",
+        "efeito": "Dano de Luz/Sagrado: 1d8. Causa o dobro de dano em criaturas sombrias.",
+        "custo": 0,
+        "base": true
+      },
+      {
+        "nome": "Restauração",
+        "tipo": "Suporte",
+        "efeito": "Cura 1d8 de PV.",
+        "custo": 6,
+        "base": false
+      },
+      {
+        "nome": "Aura Régia",
+        "tipo": "Controle",
+        "efeito": "Aplica Medo (-2 em ataques, 3 turnos) em inimigos de menor Vontade que encaram o usuário.",
+        "custo": 3,
+        "base": false
+      },
+      {
+        "nome": "Proteção Contra Sombras",
+        "tipo": "Defensivo",
+        "efeito": "+2 na Defesa contra ataques de Trevas por uma cena.",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Luz Criadora",
+        "tipo": "Utilitário",
+        "efeito": "Ilumina uma área ampla por horas, sem calor ou fogo real.",
+        "custo": 2,
+        "base": false
+      }
+    ]
+  },
+  "Sekhmet": {
+    "grupo": "Deuses Celestiais e Regionais",
+    "skills": [
+      {
+        "nome": "Fúria Solar",
+        "tipo": "Ofensivo",
+        "efeito": "Dano de Fogo: 1d8. Pode causar Queimadura (1d6 por 3 turnos).",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Doenças Sagradas",
+        "tipo": "Ofensivo",
+        "efeito": "Dano de Veneno: 1d6. Pode causar Veneno Forte (1d6 por 6 turnos).",
+        "custo": 6,
+        "base": false
+      },
+      {
+        "nome": "Cura por Cauterização",
+        "tipo": "Suporte",
+        "efeito": "Cura 1d6 de PV, mas causa 1 ponto de dano de Fogo adicional (ferida cauterizada).",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Intimidação",
+        "tipo": "Controle",
+        "efeito": "Aplica Medo (-2 em ataques, 3 turnos).",
+        "custo": 3,
+        "base": false
+      },
+      {
+        "nome": "Destruição de Infecções Espirituais",
+        "tipo": "Suporte",
+        "efeito": "Remove um efeito de Corrupção ou Veneno de um alvo.",
+        "custo": 7,
+        "base": false
+      }
+    ]
+  },
+  "Bastet": {
+    "grupo": "Deuses Celestiais e Regionais",
+    "skills": [
+      {
+        "nome": "Agilidade",
+        "tipo": "Melhoria",
+        "efeito": "+2 na Defesa por 3 turnos, através de reflexos felinos.",
+        "custo": 3,
+        "base": false
+      },
+      {
+        "nome": "Proteção de Lares",
+        "tipo": "Defensivo",
+        "efeito": "Protege uma residência contra intrusos não convidados por uma noite.",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Percepção Noturna",
+        "tipo": "Utilitário",
+        "efeito": "Visão perfeita no escuro por uma cena.",
+        "custo": 2,
+        "base": false
+      },
+      {
+        "nome": "Graça Sobrenatural",
+        "tipo": "Melhoria",
+        "efeito": "Sempre cai de pé; ignora dano de quedas nesta cena.",
+        "custo": 3,
+        "base": false
+      },
+      {
+        "nome": "Encanto Leve",
+        "tipo": "Controle",
+        "efeito": "Aplica Fraqueza leve de vontade (-1 em testes de resistir a pedidos gentis) em um alvo por 4 turnos.",
+        "custo": 4,
+        "base": false
+      }
+    ]
+  },
+  "Seth": {
+    "grupo": "Deuses Celestiais e Regionais",
+    "skills": [
+      {
+        "nome": "Tempestade de Areia",
+        "tipo": "Ofensivo / Controle",
+        "efeito": "Dano de Impacto: 1d10 em área pequena (3m). Pode causar Cegueira (-50% de precisão, 3 turnos).",
+        "custo": 8,
+        "base": false
+      },
+      {
+        "nome": "Força Caótica",
+        "tipo": "Ofensivo",
+        "efeito": "Dano Arcano: 1d10 — dano instável (role duas vezes e use o resultado indicado pelo mestre).",
+        "custo": 0,
+        "base": true
+      },
+      {
+        "nome": "Ruptura de Barreiras",
+        "tipo": "Utilitário",
+        "efeito": "Destrói ou desativa uma barreira mágica ou selo simples.",
+        "custo": 6,
+        "base": false
+      },
+      {
+        "nome": "Resistência ao Calor",
+        "tipo": "Defensivo",
+        "efeito": "Imunidade a dano ambiental de calor e fogo por uma cena.",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Agressividade Sobrenatural",
+        "tipo": "Suporte",
+        "efeito": "+1d6 de dano no próximo ataque, mas -2 na Defesa até o fim do turno.",
+        "custo": 3,
+        "base": false
+      }
+    ]
+  },
+  "Hórus": {
+    "grupo": "Deuses Celestiais e Regionais",
+    "skills": [
+      {
+        "nome": "Visão Distante",
+        "tipo": "Utilitário",
+        "efeito": "Enxerga com clareza um ponto distante, mesmo além do alcance normal.",
+        "custo": 3,
+        "base": false
+      },
+      {
+        "nome": "Ataques Precisos",
+        "tipo": "Melhoria",
+        "efeito": "O próximo ataque ignora a armadura do alvo.",
+        "custo": 5,
+        "base": false
+      },
+      {
+        "nome": "Proteção Aérea",
+        "tipo": "Defensivo",
+        "efeito": "+2 na Defesa contra ataques vindos do ar ou à distância por uma cena.",
+        "custo": 4,
+        "base": false
+      },
+      {
+        "nome": "Autoridade Real",
+        "tipo": "Utilitário",
+        "efeito": "Concede vantagem em testes sociais envolvendo comando ou realeza por uma cena.",
+        "custo": 3,
+        "base": false
+      },
+      {
+        "nome": "Percepção de Ameaças",
+        "tipo": "Utilitário",
+        "efeito": "Revela a maior ameaça presente em uma área ou situação.",
+        "custo": 3,
+        "base": false
+      }
+    ]
+  }
+}
+;
 
 const ATTRS = ['forca','destreza','intelecto','vontade','fe'];
 const ATTR_LABEL = {forca:'Força',destreza:'Destreza',intelecto:'Intelecto',vontade:'Vontade',fe:'Fé'};
@@ -907,36 +1822,62 @@ function levelUp(){
   document.getElementById('xp-current').value = state.xp;
   recalc();
 }
+const BLESSING_GOD_NAMES = Object.keys(BLESSINGS_DB);
+
 function addBlessingRow(data){
   data = data || {};
   const wrap = document.getElementById('bless-list');
   const row = document.createElement('div');
   row.className='bless-row';
+  const godOptions = '<option value="">— escolha o deus —</option>' +
+    BLESSING_GOD_NAMES.map(g=>`<option value="${g}" ${g===data.deus?'selected':''}>${g}</option>`).join('');
   row.innerHTML = `
-    <div class="field"><label>Bênção</label><input type="text" class="b-nome" placeholder="Nome da bênção" value="${data.nome||''}"></div>
-    <div class="field"><label>Deus</label><input type="text" class="b-deus" placeholder="Ex: Montus" value="${data.deus||''}"></div>
-    <div class="field"><label>Tier</label>
-      <select class="b-tier" onchange="this.parentElement.nextElementSibling.querySelector('input').value = this.value==='Menor'?2:this.value==='Intermediária'?4:this.value==='Maior'?6:''">
-        <option value="">—</option><option ${data.tier==='Menor'?'selected':''}>Menor</option><option ${data.tier==='Intermediária'?'selected':''}>Intermediária</option><option ${data.tier==='Maior'?'selected':''}>Maior</option>
-      </select>
-    </div>
-    <div class="field"><label>Custo PE</label><input type="number" class="b-custo" min="0" value="${data.custo!=null?data.custo:''}"></div>
-    <div class="field"><label>Efeito</label><input type="text" class="b-efeito" placeholder="Efeito mecânico resumido" value="${data.efeito||''}"></div>
+    <div class="field"><label>Deus</label><select class="b-deus" onchange="onBlessDeusChange(this)">${godOptions}</select></div>
+    <div class="field"><label>Bênção</label><select class="b-nome" onchange="onBlessNomeChange(this)"><option value="">— escolha o deus primeiro —</option></select></div>
+    <div class="field"><label>Detalhes</label><div class="bless-info">—</div></div>
     <button class="remove-btn" onclick="this.parentElement.remove()">×</button>
   `;
   wrap.appendChild(row);
+  if(data.deus) populateBlessOptions(row, data.deus, data.nome);
 }
+
+function populateBlessOptions(row, deus, selectedNome){
+  const sel = row.querySelector('.b-nome');
+  const godData = BLESSINGS_DB[deus];
+  if(!godData || !godData.skills.length){
+    sel.innerHTML = '<option value="">— este deus não concede bênçãos jogáveis —</option>';
+    updateBlessInfo(row);
+    return;
+  }
+  sel.innerHTML = '<option value="">— escolha a bênção —</option>' +
+    godData.skills.map(s=>`<option value="${s.nome}" ${s.nome===selectedNome?'selected':''}>${s.nome}</option>`).join('');
+  updateBlessInfo(row);
+}
+
+function onBlessDeusChange(sel){
+  populateBlessOptions(sel.closest('.bless-row'), sel.value, null);
+}
+function onBlessNomeChange(sel){
+  updateBlessInfo(sel.closest('.bless-row'));
+}
+function updateBlessInfo(row){
+  const deus = row.querySelector('.b-deus').value;
+  const nome = row.querySelector('.b-nome').value;
+  const info = row.querySelector('.bless-info');
+  const godData = BLESSINGS_DB[deus];
+  const skill = godData && godData.skills.find(s=>s.nome===nome);
+  if(!skill){ info.innerHTML = '—'; return; }
+  info.innerHTML = `<span class="bless-tipo">${skill.tipo}</span>${skill.efeito}<span class="bless-custo">Custo ${skill.custo}${skill.base?' (Base)':''}</span>`;
+}
+
 function clearBlessingRows(){
   document.getElementById('bless-list').innerHTML = '';
 }
 function collectBlessings(){
   return Array.from(document.querySelectorAll('#bless-list .bless-row')).map(row=>({
-    nome: row.querySelector('.b-nome').value,
     deus: row.querySelector('.b-deus').value,
-    tier: row.querySelector('.b-tier').value,
-    custo: row.querySelector('.b-custo').value,
-    efeito: row.querySelector('.b-efeito').value,
-  }));
+    nome: row.querySelector('.b-nome').value,
+  })).filter(b=>b.deus && b.nome);
 }
 
 /* ---- Poderes mágicos personalizados ---- */
