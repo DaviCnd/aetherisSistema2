@@ -222,6 +222,7 @@ table.skills tr.group-row td{
   background:var(--crimson-dim);border:1px solid var(--crimson);color:#f3d9de;border-radius:6px;
   width:34px;height:34px;cursor:pointer;font-size:15px;
 }
+.add-btn:disabled{opacity:.35;cursor:not-allowed;}
 .add-btn{
   background:#241c14;border:1px solid var(--gold-dim);color:var(--gold);border-radius:6px;
   padding:9px 16px;font-size:13px;cursor:pointer;letter-spacing:.03em;
@@ -266,7 +267,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px;}
       <button class="add-btn" style="flex:1;" onclick="doRegister()">Criar Conta</button>
     </div>
     <div class="hint" id="auth-status" style="margin-top:10px;"></div>
-    <div class="hint">Suas fichas ficam guardadas no servidor, vinculadas à sua conta — acessíveis de qualquer dispositivo. Após realizar qualquer alteração, clique em SALVAR.</div>
+    <div class="hint">Suas fichas ficam guardadas no servidor, vinculadas à sua conta — acessíveis de qualquer dispositivo.</div>
   </div>
 </div>
 
@@ -275,7 +276,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px;}
   <div class="header">
     <div class="eyebrow">Livro de Personagem</div>
     <h1>AETHERIS</h1>
-    <p>Ficha interativa — atributos, perícias e status</p>
+    <p>Ficha interativa — atributos, perícias e status calculados automaticamente</p>
     <div style="margin-top:10px;font-size:12px;color:var(--muted);">
       Logado como <b id="whoami" style="color:var(--gold);"></b> ·
       <button class="print-btn" id="master-toggle-btn" style="padding:3px 10px;display:none;" onclick="toggleMasterPanel()">Painel do Mestre</button>
@@ -300,7 +301,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px;}
   </div>
 
   <div class="panel" id="save-panel">
-    <h2><span class="bar"></span>Suas Fichas</h2>
+    <h2><span class="bar"></span>Fichas Salvas (na sua conta)</h2>
     <div class="grid grid-3 save-controls" style="align-items:end;">
       <div class="field">
         <label>Nome pra salvar</label>
@@ -390,7 +391,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px;}
   </div>
 
   <div class="panel">
-    <h2><span class="bar"></span>Status</h2>
+    <h2><span class="bar"></span>Status de Combate</h2>
     <div class="grid grid-4" style="margin-bottom:14px;">
       <div class="stat-card">
         <div class="label">Pontos de Vida</div>
@@ -476,10 +477,10 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px;}
   </div>
 
   <div class="panel">
-    <h2><span class="bar"></span>Poder Único da Alma</h2>
+    <h2><span class="bar"></span>Poderes Mágicos Personalizados</h2>
     <div class="hint" style="margin-bottom:14px;">
       Monte seus próprios poderes combinando um <b>tipo de dano</b>, <b>debuffs/efeitos</b> e <b>melhorias</b>.
-      Limites por nível: <b>Comum</b> = 1 de cada · <b>Intermediário</b> = 2 de cada · <b>Avançado</b> = 3 de cada (efeitos únicos, combine com o mestre).
+      Limites por nível — <b>Comum</b>: 1 dano, 1 efeito, sem melhorias · <b>Intermediário</b>: 2 danos, 2 efeitos, 1 melhoria · <b>Avançado</b>: 3 danos, 3 efeitos, 2 melhorias.
       Regra geral: dano alto = pouco controle, controle alto = pouco dano, efeitos fortes duram pouco.
     </div>
     <div id="powers-list"></div>
@@ -564,7 +565,11 @@ const POWER_UPGRADES = [
   {nome:'Escudo mágico', efeito:'Reduz dano recebido', custo:5},
   {nome:'Reflexão', efeito:'Devolve parte do dano', custo:10},
 ];
-const POWER_TIER_LIMITS = {'Comum':1, 'Intermediário':2, 'Avançado':3};
+const POWER_TIER_LIMITS = {
+  'Comum': {dano:1, efeito:1, melhoria:0},
+  'Intermediário': {dano:2, efeito:2, melhoria:1},
+  'Avançado': {dano:3, efeito:3, melhoria:2},
+};
 
 const ATTRS = ['forca','destreza','intelecto','vontade','fe'];
 const ATTR_LABEL = {forca:'Força',destreza:'Destreza',intelecto:'Intelecto',vontade:'Vontade',fe:'Fé'};
@@ -1000,10 +1005,14 @@ const POWER_KIND_LABEL = {dano:'tipo(s) de dano', efeito:'efeito(s)', melhoria:'
 
 function addPowerSubRow(btn, kind, presetValue){
   const card = btn.closest('.power-card');
-  const limit = POWER_TIER_LIMITS[card.querySelector('.pw-tier').value] || 1;
+  const tierLimits = POWER_TIER_LIMITS[card.querySelector('.pw-tier').value] || POWER_TIER_LIMITS['Comum'];
+  const limit = tierLimits[kind];
   const listEl = powerListElFor(card, kind);
   if(listEl.children.length >= limit){
-    setStatus('Nesse nível de poder, o máximo é '+limit+' '+POWER_KIND_LABEL[kind]+'. Suba o nível pra adicionar mais.', true);
+    const msg = limit === 0
+      ? 'Poderes de nível Comum não podem ter melhorias. Suba pra Intermediário ou Avançado.'
+      : 'Nesse nível de poder, o máximo é '+limit+' '+POWER_KIND_LABEL[kind]+'. Suba o nível pra adicionar mais.';
+    setStatus(msg, true);
     return;
   }
   const list = powerSourceFor(kind);
@@ -1056,14 +1065,35 @@ function recomputePowerCard(card){
 }
 
 function updatePowerLimitNotes(card){
-  const limit = POWER_TIER_LIMITS[card.querySelector('.pw-tier').value] || 1;
-  card.querySelector('.pw-dano-limit').textContent = `(${powerListElFor(card,'dano').children.length}/${limit})`;
-  card.querySelector('.pw-efeito-limit').textContent = `(${powerListElFor(card,'efeito').children.length}/${limit})`;
-  card.querySelector('.pw-melhoria-limit').textContent = `(${powerListElFor(card,'melhoria').children.length}/${limit})`;
+  const tierLimits = POWER_TIER_LIMITS[card.querySelector('.pw-tier').value] || POWER_TIER_LIMITS['Comum'];
+  ['dano','efeito','melhoria'].forEach(kind=>{
+    const limit = tierLimits[kind];
+    const listEl = powerListElFor(card, kind);
+    const noteClass = kind==='dano' ? '.pw-dano-limit' : kind==='efeito' ? '.pw-efeito-limit' : '.pw-melhoria-limit';
+    const btnClass = kind==='dano' ? '.pw-add-dano' : kind==='efeito' ? '.pw-add-efeito' : '.pw-add-melhoria';
+    card.querySelector(noteClass).textContent = `(${listEl.children.length}/${limit})`;
+    const addBtn = card.querySelector(btnClass);
+    addBtn.disabled = listEl.children.length >= limit;
+    addBtn.title = limit===0 ? 'Não disponível para poderes Comuns' : '';
+  });
+}
+
+function enforcePowerLimits(card){
+  const tierLimits = POWER_TIER_LIMITS[card.querySelector('.pw-tier').value] || POWER_TIER_LIMITS['Comum'];
+  ['dano','efeito','melhoria'].forEach(kind=>{
+    const limit = tierLimits[kind];
+    const listEl = powerListElFor(card, kind);
+    while(listEl.children.length > limit){
+      listEl.lastElementChild.remove();
+    }
+  });
+  recomputePowerCard(card);
 }
 
 function onPowerTierChange(sel){
-  updatePowerLimitNotes(sel.closest('.power-card'));
+  const card = sel.closest('.power-card');
+  enforcePowerLimits(card);
+  updatePowerLimitNotes(card);
 }
 
 function autoDescribePower(btn){
