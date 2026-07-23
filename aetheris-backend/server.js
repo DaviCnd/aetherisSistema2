@@ -19,6 +19,13 @@ const { createClient } = require('@libsql/client');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'troque-este-segredo-em-producao';
+// Nome de usuário do mestre — quem estiver logado com esse username vê o Painel do Mestre.
+// Configure isso como variável de ambiente no Render (ADMIN_USERNAME).
+const ADMIN_USERNAME = (process.env.ADMIN_USERNAME || '').toLowerCase();
+
+function isAdminUser(username) {
+  return !!ADMIN_USERNAME && String(username || '').toLowerCase() === ADMIN_USERNAME;
+}
 
 // ---------- Banco de dados ----------
 const db = process.env.TURSO_DATABASE_URL
@@ -65,6 +72,13 @@ function auth(req, res, next) {
   }
 }
 
+function requireAdmin(req, res, next) {
+  if (!isAdminUser(req.user.username)) {
+    return res.status(403).json({ error: 'Acesso restrito ao mestre.' });
+  }
+  next();
+}
+
 function setAuthCookie(res, payload) {
   const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' });
   res.cookie('token', token, {
@@ -96,7 +110,7 @@ app.post('/api/register', wrap(async (req, res) => {
     args: [username, hash],
   });
   setAuthCookie(res, { id: Number(info.lastInsertRowid), username });
-  res.json({ ok: true, username });
+  res.json({ ok: true, username, isAdmin: isAdminUser(username) });
 }));
 
 app.post('/api/login', wrap(async (req, res) => {
@@ -107,7 +121,7 @@ app.post('/api/login', wrap(async (req, res) => {
     return res.status(401).json({ error: 'Usuário ou senha inválidos.' });
   }
   setAuthCookie(res, { id: user.id, username: user.username });
-  res.json({ ok: true, username: user.username });
+  res.json({ ok: true, username: user.username, isAdmin: isAdminUser(user.username) });
 }));
 
 app.post('/api/logout', (req, res) => {
@@ -116,7 +130,7 @@ app.post('/api/logout', (req, res) => {
 });
 
 app.get('/api/me', auth, (req, res) => {
-  res.json({ username: req.user.username });
+  res.json({ username: req.user.username, isAdmin: isAdminUser(req.user.username) });
 });
 
 // ---------- Fichas (CRUD, sempre isoladas por usuário) ----------
@@ -168,6 +182,29 @@ app.delete('/api/sheets/:id', auth, wrap(async (req, res) => {
     args: [req.params.id, req.user.id],
   });
   res.json({ ok: true });
+}));
+
+// ---------- Painel do Mestre (só o usuário definido em ADMIN_USERNAME) ----------
+app.get('/api/admin/sheets', auth, requireAdmin, wrap(async (req, res) => {
+  const result = await db.execute(`
+    SELECT sheets.id, sheets.name, sheets.updated_at, users.username
+    FROM sheets
+    JOIN users ON users.id = sheets.user_id
+    ORDER BY users.username COLLATE NOCASE, sheets.updated_at DESC
+  `);
+  res.json(result.rows);
+}));
+
+app.get('/api/admin/sheets/:id', auth, requireAdmin, wrap(async (req, res) => {
+  const result = await db.execute({
+    sql: `SELECT sheets.*, users.username FROM sheets
+          JOIN users ON users.id = sheets.user_id
+          WHERE sheets.id = ?`,
+    args: [req.params.id],
+  });
+  const row = result.rows[0];
+  if (!row) return res.status(404).json({ error: 'Ficha não encontrada.' });
+  res.json({ id: row.id, name: row.name, username: row.username, data: JSON.parse(row.data) });
 }));
 
 init()
