@@ -201,6 +201,23 @@ table.skills tr.group-row td{
   display:grid;grid-template-columns:1.3fr 1fr .8fr .6fr 1.6fr auto;gap:8px;align-items:end;margin-bottom:10px;
 }
 @media(max-width:800px){.bless-row{grid-template-columns:1fr 1fr;}}
+
+.power-card{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:16px;}
+.power-card-head{display:flex;gap:10px;align-items:end;margin-bottom:14px;flex-wrap:wrap;}
+.power-card-head .field{flex:1 1 160px;}
+.power-cost-badge{background:#0d0b13;border:1px solid var(--gold-dim);border-radius:6px;padding:6px 14px;text-align:center;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);}
+.power-cost-badge .pw-total{display:block;font-family:var(--font-display);font-size:22px;color:var(--gold);font-weight:700;}
+.power-sub-block{margin-bottom:12px;}
+.power-sub-title{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.power-limit-note{color:var(--gold-dim);font-weight:600;margin-left:4px;}
+.power-sub-row{display:flex;gap:8px;align-items:center;margin-bottom:6px;}
+.power-sub-row select{flex:0 0 190px;}
+.power-sub-info{flex:1;font-size:12px;color:var(--muted);}
+@media(max-width:600px){
+  .power-sub-row{flex-wrap:wrap;}
+  .power-sub-row select{flex:1 1 100%;}
+  .power-sub-info{flex:1 1 100%;font-size:11px;}
+}
 .remove-btn{
   background:var(--crimson-dim);border:1px solid var(--crimson);color:#f3d9de;border-radius:6px;
   width:34px;height:34px;cursor:pointer;font-size:15px;
@@ -258,15 +275,32 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px;}
   <div class="header">
     <div class="eyebrow">Livro de Personagem</div>
     <h1>AETHERIS</h1>
-    <p>Ficha interativa — atributos, perícias e status</p>
+    <p>Ficha interativa — atributos, perícias e status calculados automaticamente</p>
     <div style="margin-top:10px;font-size:12px;color:var(--muted);">
       Logado como <b id="whoami" style="color:var(--gold);"></b> ·
+      <button class="print-btn" id="master-toggle-btn" style="padding:3px 10px;display:none;" onclick="toggleMasterPanel()">Painel do Mestre</button>
       <button class="print-btn" style="padding:3px 10px;" onclick="doLogout()">Sair</button>
     </div>
   </div>
 
+  <div class="panel" id="master-panel" style="display:none;">
+    <h2><span class="bar"></span>Painel do Mestre</h2>
+    <div class="hint" style="margin-bottom:12px;">Todas as fichas salvas por todos os jogadores. Clique em "Ver" pra visualizar (somente leitura).</div>
+    <div class="table-scroll">
+      <table class="skills" id="master-table">
+        <thead><tr><th>Jogador</th><th>Ficha</th><th>Atualizada em</th><th></th></tr></thead>
+        <tbody id="master-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel" id="master-view-banner" style="display:none;border-color:var(--gold-dim);">
+    <h2 style="margin-bottom:6px;"><span class="bar"></span>Visualizando ficha de <span id="master-view-who" style="color:var(--gold);"></span></h2>
+    <div class="hint">Modo somente leitura. <button class="add-btn" style="margin-left:8px;" onclick="exitMasterView()">Voltar</button></div>
+  </div>
+
   <div class="panel" id="save-panel">
-    <h2><span class="bar"></span>Suas Fichas</h2>
+    <h2><span class="bar"></span>Fichas Salvas (na sua conta)</h2>
     <div class="grid grid-3 save-controls" style="align-items:end;">
       <div class="field">
         <label>Nome pra salvar</label>
@@ -442,6 +476,17 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px;}
   </div>
 
   <div class="panel">
+    <h2><span class="bar"></span>Poderes Mágicos Personalizados</h2>
+    <div class="hint" style="margin-bottom:14px;">
+      Monte seus próprios poderes combinando um <b>tipo de dano</b>, <b>debuffs/efeitos</b> e <b>melhorias</b>.
+      Limites por nível: <b>Comum</b> = 1 de cada · <b>Avançado</b> = 2 de cada · <b>Lendário</b> = 3 de cada (efeitos únicos, combine com o mestre).
+      Regra geral: dano alto = pouco controle, controle alto = pouco dano, efeitos fortes duram pouco.
+    </div>
+    <div id="powers-list"></div>
+    <button class="add-btn" onclick="addPowerCard()">+ Criar Poder</button>
+  </div>
+
+  <div class="panel">
     <h2><span class="bar"></span>Inventário &amp; Anotações</h2>
     <div class="grid grid-2">
       <div class="field"><label>Inventário / Equipamento</label><textarea id="f-inventario" rows="4"></textarea></div>
@@ -455,6 +500,72 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px;}
 </div>
 
 <script>
+/* ---------------- SISTEMA DE CRIAÇÃO DE PODERES ---------------- */
+const POWER_DAMAGE_TYPES = [
+  {tipo:'Corte', dado:'1d8', efeito:'Pode causar sangramento', custo:0},
+  {tipo:'Perfuração', dado:'1d8', efeito:'Ignora parte da armadura', custo:0},
+  {tipo:'Impacto', dado:'1d10', efeito:'Pode empurrar ou derrubar', custo:0},
+  {tipo:'Fogo', dado:'1d8', efeito:'Pode causar queimadura', custo:0},
+  {tipo:'Gelo', dado:'1d6', efeito:'Pode reduzir movimento', custo:0},
+  {tipo:'Eletricidade', dado:'1d10', efeito:'Pode causar choque', custo:0},
+  {tipo:'Veneno', dado:'1d6', efeito:'Pode causar intoxicação', custo:0},
+  {tipo:'Ácido', dado:'1d8', efeito:'Corrosão', custo:0},
+  {tipo:'Trevas', dado:'1d8', efeito:'Pode causar medo', custo:0},
+  {tipo:'Luz/Sagrado', dado:'1d8', efeito:'Forte contra criaturas sombrias', custo:0},
+  {tipo:'Som', dado:'1d6', efeito:'Pode desorientar', custo:0},
+  {tipo:'Psíquico', dado:'1d6', efeito:'Afeta mente', custo:0},
+  {tipo:'Sangue', dado:'1d10', efeito:'Pode drenar vida', custo:0},
+  {tipo:'Arcano', dado:'1d10', efeito:'Dano puro', custo:0},
+  {tipo:'Vácuo', dado:'1d12', efeito:'Dano instável', custo:3},
+];
+const POWER_DEBUFFS = [
+  {nome:'Sangramento', duracao:'3 turnos', penalidade:'1d4 por turno', custo:3},
+  {nome:'Sangramento Profundo', duracao:'5 turnos', penalidade:'1d6 por turno', custo:5},
+  {nome:'Hemorragia', duracao:'3 turnos', penalidade:'1d10 por turno', custo:8},
+  {nome:'Queimadura', duracao:'3 turnos', penalidade:'1d6 por turno', custo:4},
+  {nome:'Incêndio', duracao:'5 turnos', penalidade:'1d8 por turno', custo:7},
+  {nome:'Veneno Fraco', duracao:'4 turnos', penalidade:'1d4 por turno', custo:3},
+  {nome:'Veneno Forte', duracao:'6 turnos', penalidade:'1d6 por turno', custo:6},
+  {nome:'Veneno Mortal', duracao:'3 turnos', penalidade:'1d12 por turno', custo:10},
+  {nome:'Congelamento Leve', duracao:'3 turnos', penalidade:'-2m movimento', custo:3},
+  {nome:'Congelamento', duracao:'2 turnos', penalidade:'-50% velocidade', custo:5},
+  {nome:'Congelamento Total', duracao:'1 turno', penalidade:'Não age', custo:8},
+  {nome:'Choque', duracao:'1 turno', penalidade:'Perde reação', custo:4},
+  {nome:'Paralisia', duracao:'1 turno', penalidade:'Não pode agir', custo:8},
+  {nome:'Atordoamento', duracao:'1 turno', penalidade:'-50% ataque/defesa', custo:5},
+  {nome:'Cegueira', duracao:'3 turnos', penalidade:'-50% precisão', custo:5},
+  {nome:'Surdez', duracao:'3 turnos', penalidade:'Falha testes sonoros', custo:3},
+  {nome:'Silêncio', duracao:'2 turnos', penalidade:'Não usa magia verbal', custo:7},
+  {nome:'Medo', duracao:'3 turnos', penalidade:'-2 ataques', custo:3},
+  {nome:'Terror', duracao:'2 turnos', penalidade:'Pode perder ação', custo:6},
+  {nome:'Pânico', duracao:'1 turno', penalidade:'Foge/perde ação', custo:8},
+  {nome:'Confusão', duracao:'3 turnos', penalidade:'25% erro de ação', custo:6},
+  {nome:'Dominação Mental', duracao:'1 turno', penalidade:'Controla o alvo', custo:10},
+  {nome:'Fraqueza', duracao:'4 turnos', penalidade:'-25% dano', custo:4},
+  {nome:'Exaustão', duracao:'5 turnos', penalidade:'-2 em testes', custo:5},
+  {nome:'Lentidão', duracao:'3 turnos', penalidade:'-50% movimento', custo:4},
+  {nome:'Maldição', duracao:'5 turnos', penalidade:'-1 atributos', custo:7},
+  {nome:'Marca Sombria', duracao:'4 turnos', penalidade:'Recebe +25% dano', custo:5},
+  {nome:'Drenagem Vital', duracao:'3 turnos', penalidade:'1d6 dano + cura 1d6', custo:8},
+  {nome:'Corrupção', duracao:'5 turnos', penalidade:'1d8 dano/turno', custo:9},
+];
+const POWER_UPGRADES = [
+  {nome:'+1d6 dano', efeito:'Aumenta dano', custo:2},
+  {nome:'Área pequena (3m)', efeito:'Atinge vários alvos', custo:3},
+  {nome:'Área média (10m)', efeito:'Grande alcance', custo:6},
+  {nome:'Área grande (20m)', efeito:'Ataque massivo', custo:10},
+  {nome:'Dano contínuo', efeito:'Dano por turno', custo:3},
+  {nome:'Ignorar armadura', efeito:'Passa defesa física', custo:5},
+  {nome:'Roubar vida', efeito:'Cura metade do dano', custo:6},
+  {nome:'Empurrar', efeito:'Move inimigos', custo:2},
+  {nome:'Derrubar', efeito:'Derruba o alvo', custo:3},
+  {nome:'Teleporte', efeito:'Usuário se move junto', custo:8},
+  {nome:'Invocar criatura', efeito:'Cria aliado temporário', custo:8},
+  {nome:'Escudo mágico', efeito:'Reduz dano recebido', custo:5},
+  {nome:'Reflexão', efeito:'Devolve parte do dano', custo:10},
+];
+const POWER_TIER_LIMITS = {'Comum':1, 'Avançado':2, 'Lendário':3};
+
 const ATTRS = ['forca','destreza','intelecto','vontade','fe'];
 const ATTR_LABEL = {forca:'Força',destreza:'Destreza',intelecto:'Intelecto',vontade:'Vontade',fe:'Fé'};
 const STAT_LABEL = {pv:'PV',pe:'PE',defesa:'Defesa',rescorr:'Resist. a Corrupção',integridade:'Integridade da Alma'};
@@ -823,6 +934,165 @@ function collectBlessings(){
   }));
 }
 
+/* ---- Poderes mágicos personalizados ---- */
+function addPowerCard(data){
+  data = data || {};
+  const wrap = document.getElementById('powers-list');
+  const card = document.createElement('div');
+  card.className = 'power-card';
+  card.innerHTML = `
+    <div class="power-card-head">
+      <div class="field" style="flex:2 1 220px;"><label>Nome do Poder</label><input type="text" class="pw-nome" placeholder="Ex: Chama do Abismo" value="${(data.nome||'').replace(/"/g,'&quot;')}"></div>
+      <div class="field" style="flex:1 1 140px;"><label>Nível</label>
+        <select class="pw-tier" onchange="onPowerTierChange(this)">
+          <option ${(!data.tier||data.tier==='Comum')?'selected':''}>Comum</option>
+          <option ${data.tier==='Avançado'?'selected':''}>Avançado</option>
+          <option ${data.tier==='Lendário'?'selected':''}>Lendário</option>
+        </select>
+      </div>
+      <div class="power-cost-badge">Custo total<br><span class="pw-total">0</span></div>
+      <button class="remove-btn" onclick="this.closest('.power-card').remove()" title="Remover poder">×</button>
+    </div>
+
+    <div class="power-sub-block">
+      <div class="power-sub-title">Tipo(s) de Dano <span class="power-limit-note pw-dano-limit"></span></div>
+      <div class="pw-dano-list"></div>
+      <button class="add-btn pw-add-dano" style="padding:4px 10px;font-size:12px;" onclick="addPowerSubRow(this,'dano')">+ Adicionar dano</button>
+    </div>
+
+    <div class="power-sub-block">
+      <div class="power-sub-title">Debuffs / Efeitos <span class="power-limit-note pw-efeito-limit"></span></div>
+      <div class="pw-efeito-list"></div>
+      <button class="add-btn pw-add-efeito" style="padding:4px 10px;font-size:12px;" onclick="addPowerSubRow(this,'efeito')">+ Adicionar efeito</button>
+    </div>
+
+    <div class="power-sub-block">
+      <div class="power-sub-title">Melhorias <span class="power-limit-note pw-melhoria-limit"></span></div>
+      <div class="pw-melhoria-list"></div>
+      <button class="add-btn pw-add-melhoria" style="padding:4px 10px;font-size:12px;" onclick="addPowerSubRow(this,'melhoria')">+ Adicionar melhoria</button>
+    </div>
+
+    <div class="field" style="margin-top:6px;">
+      <label>Descrição</label>
+      <textarea class="pw-descricao" rows="2" placeholder="Descreva o efeito narrativo do poder...">${data.descricao||''}</textarea>
+      <button class="add-btn" style="margin-top:6px;padding:4px 10px;font-size:12px;" onclick="autoDescribePower(this)">Gerar descrição automática</button>
+    </div>
+  `;
+  wrap.appendChild(card);
+
+  (data.danos||[]).forEach(d=>addPowerSubRow(card.querySelector('.pw-add-dano'),'dano',d.tipo));
+  (data.efeitos||[]).forEach(d=>addPowerSubRow(card.querySelector('.pw-add-efeito'),'efeito',d.nome));
+  (data.melhorias||[]).forEach(d=>addPowerSubRow(card.querySelector('.pw-add-melhoria'),'melhoria',d.nome));
+  updatePowerLimitNotes(card);
+  recomputePowerCard(card);
+}
+
+function powerListElFor(card, kind){
+  return card.querySelector(kind==='dano' ? '.pw-dano-list' : kind==='efeito' ? '.pw-efeito-list' : '.pw-melhoria-list');
+}
+function powerSourceFor(kind){
+  return kind==='dano' ? POWER_DAMAGE_TYPES : kind==='efeito' ? POWER_DEBUFFS : POWER_UPGRADES;
+}
+function powerKeyFor(kind){
+  return kind==='dano' ? 'tipo' : 'nome';
+}
+const POWER_KIND_LABEL = {dano:'tipo(s) de dano', efeito:'efeito(s)', melhoria:'melhoria(s)'};
+
+function addPowerSubRow(btn, kind, presetValue){
+  const card = btn.closest('.power-card');
+  const limit = POWER_TIER_LIMITS[card.querySelector('.pw-tier').value] || 1;
+  const listEl = powerListElFor(card, kind);
+  if(listEl.children.length >= limit){
+    setStatus('Nesse nível de poder, o máximo é '+limit+' '+POWER_KIND_LABEL[kind]+'. Suba o nível pra adicionar mais.', true);
+    return;
+  }
+  const list = powerSourceFor(kind);
+  const key = powerKeyFor(kind);
+  const opts = '<option value="">—</option>' + list.map(it=>`<option value="${it[key]}" ${it[key]===presetValue?'selected':''}>${it[key]}</option>`).join('');
+  const row = document.createElement('div');
+  row.className = 'power-sub-row';
+  row.dataset.kind = kind;
+  row.innerHTML = `<select class="pw-select" onchange="onPowerSubChange(this)">${opts}</select>
+    <span class="power-sub-info"></span>
+    <button class="remove-btn" style="width:26px;height:26px;font-size:13px;flex-shrink:0;" onclick="removePowerSubRow(this)">×</button>`;
+  listEl.appendChild(row);
+  updatePowerSubInfo(row);
+  recomputePowerCard(card);
+  updatePowerLimitNotes(card);
+}
+
+function removePowerSubRow(btn){
+  const card = btn.closest('.power-card');
+  btn.closest('.power-sub-row').remove();
+  recomputePowerCard(card);
+  updatePowerLimitNotes(card);
+}
+
+function onPowerSubChange(sel){
+  const row = sel.closest('.power-sub-row');
+  updatePowerSubInfo(row);
+  recomputePowerCard(sel.closest('.power-card'));
+}
+
+function updatePowerSubInfo(row){
+  const kind = row.dataset.kind;
+  const val = row.querySelector('.pw-select').value;
+  const info = row.querySelector('.power-sub-info');
+  if(!val){ info.textContent=''; row.dataset.cost=0; return; }
+  const item = powerSourceFor(kind).find(i=>i[powerKeyFor(kind)]===val);
+  if(!item){ info.textContent=''; row.dataset.cost=0; return; }
+  let text;
+  if(kind==='dano') text = `${item.dado} · ${item.efeito}` + (item.custo ? ` · +${item.custo}` : ' · Base');
+  else if(kind==='efeito') text = `${item.duracao} · ${item.penalidade} · +${item.custo}`;
+  else text = `${item.efeito} · +${item.custo}`;
+  info.textContent = text;
+  row.dataset.cost = item.custo;
+}
+
+function recomputePowerCard(card){
+  let total = 0;
+  card.querySelectorAll('.power-sub-row').forEach(row=>{ total += Number(row.dataset.cost||0); });
+  card.querySelector('.pw-total').textContent = total;
+}
+
+function updatePowerLimitNotes(card){
+  const limit = POWER_TIER_LIMITS[card.querySelector('.pw-tier').value] || 1;
+  card.querySelector('.pw-dano-limit').textContent = `(${powerListElFor(card,'dano').children.length}/${limit})`;
+  card.querySelector('.pw-efeito-limit').textContent = `(${powerListElFor(card,'efeito').children.length}/${limit})`;
+  card.querySelector('.pw-melhoria-limit').textContent = `(${powerListElFor(card,'melhoria').children.length}/${limit})`;
+}
+
+function onPowerTierChange(sel){
+  updatePowerLimitNotes(sel.closest('.power-card'));
+}
+
+function autoDescribePower(btn){
+  const card = btn.closest('.power-card');
+  const nome = card.querySelector('.pw-nome').value || 'O poder';
+  const pick = kind => Array.from(powerListElFor(card,kind).querySelectorAll('.pw-select')).map(s=>s.value).filter(Boolean);
+  const danos = pick('dano'), efeitos = pick('efeito'), melhorias = pick('melhoria');
+  let txt = nome + ' causa dano do tipo ' + (danos.join(' e ') || '—');
+  if(efeitos.length) txt += ', aplicando ' + efeitos.join(' e ') + ' no alvo';
+  if(melhorias.length) txt += '. Além disso: ' + melhorias.join(', ');
+  txt += '.';
+  card.querySelector('.pw-descricao').value = txt;
+}
+
+function clearPowerCards(){
+  document.getElementById('powers-list').innerHTML = '';
+}
+
+function collectPowers(){
+  return Array.from(document.querySelectorAll('#powers-list .power-card')).map(card=>({
+    nome: card.querySelector('.pw-nome').value,
+    tier: card.querySelector('.pw-tier').value,
+    danos: Array.from(powerListElFor(card,'dano').querySelectorAll('.pw-select')).map(s=>({tipo:s.value})).filter(d=>d.tipo),
+    efeitos: Array.from(powerListElFor(card,'efeito').querySelectorAll('.pw-select')).map(s=>({nome:s.value})).filter(d=>d.nome),
+    melhorias: Array.from(powerListElFor(card,'melhoria').querySelectorAll('.pw-select')).map(s=>({nome:s.value})).filter(d=>d.nome),
+    descricao: card.querySelector('.pw-descricao').value,
+  }));
+}
+
 function raceStatBonus(key){
   if(!state.race || !RACES[state.race] || !RACES[state.race].statBonus) return 0;
   const f = RACES[state.race].statBonus.find(([k])=>k===key);
@@ -950,17 +1220,18 @@ async function api(path, options){
 async function checkSession(){
   try{
     const me = await api('/api/me');
-    showApp(me.username);
+    showApp(me.username, me.isAdmin);
   }catch(e){
     document.getElementById('auth-overlay').style.display = 'flex';
     document.getElementById('app-content').style.display = 'none';
   }
 }
 
-function showApp(username){
+function showApp(username, isAdmin){
   document.getElementById('auth-overlay').style.display = 'none';
   document.getElementById('app-content').style.display = 'block';
   document.getElementById('whoami').textContent = username;
+  document.getElementById('master-toggle-btn').style.display = isAdmin ? 'inline-block' : 'none';
   refreshSheetDropdown();
 }
 
@@ -971,7 +1242,7 @@ async function doLogin(){
   try{
     const r = await api('/api/login', {method:'POST', body: JSON.stringify({username, password})});
     statusEl.style.color = 'var(--muted)';
-    showApp(r.username);
+    showApp(r.username, r.isAdmin);
   }catch(e){
     statusEl.style.color = '#e3a1ab';
     statusEl.textContent = e.message;
@@ -985,7 +1256,7 @@ async function doRegister(){
   try{
     const r = await api('/api/register', {method:'POST', body: JSON.stringify({username, password})});
     statusEl.style.color = 'var(--muted)';
-    showApp(r.username);
+    showApp(r.username, r.isAdmin);
   }catch(e){
     statusEl.style.color = '#e3a1ab';
     statusEl.textContent = e.message;
@@ -1015,6 +1286,7 @@ function buildSheetData(){
     inventario: document.getElementById('f-inventario').value,
     notas: document.getElementById('f-notas').value,
     blessings: collectBlessings(),
+    powers: collectPowers(),
   };
 }
 
@@ -1039,6 +1311,9 @@ function applySheetData(data){
   clearBlessingRows();
   (data.blessings||[]).forEach(b=>addBlessingRow(b));
 
+  clearPowerCards();
+  (data.powers||[]).forEach(p=>addPowerCard(p));
+
   recalc();
 }
 
@@ -1056,6 +1331,73 @@ async function refreshSheetDropdown(selectId){
   }catch(e){
     sel.innerHTML = '<option value="">— faça login pra ver suas fichas —</option>';
   }
+}
+
+/* ---------------- PAINEL DO MESTRE ---------------- */
+let masterViewing = false;
+
+async function toggleMasterPanel(){
+  const panel = document.getElementById('master-panel');
+  const opening = panel.style.display === 'none';
+  panel.style.display = opening ? 'block' : 'none';
+  if(opening) await loadMasterList();
+}
+
+async function loadMasterList(){
+  const body = document.getElementById('master-body');
+  body.innerHTML = '<tr><td colspan="4" class="mini-disp">Carregando…</td></tr>';
+  try{
+    const rows = await api('/api/admin/sheets');
+    if(!rows.length){
+      body.innerHTML = '<tr><td colspan="4" class="mini-disp">Nenhuma ficha salva ainda.</td></tr>';
+      return;
+    }
+    body.innerHTML = '';
+    rows.forEach(r=>{
+      const tr = document.createElement('tr');
+      const dt = new Date(r.updated_at).toLocaleString('pt-BR');
+      tr.innerHTML = `<td class="skill-name">${r.username}</td><td>${r.name}</td><td class="mini-disp">${dt}</td>
+        <td><button class="add-btn" style="padding:4px 10px;font-size:12px;">Ver</button></td>`;
+      tr.querySelector('button').onclick = ()=>viewPlayerSheet(r.id, r.username, r.name);
+      body.appendChild(tr);
+    });
+  }catch(e){
+    body.innerHTML = '<tr><td colspan="4" class="mini-disp">'+e.message+'</td></tr>';
+  }
+}
+
+async function viewPlayerSheet(id, username, sheetName){
+  try{
+    const r = await api('/api/admin/sheets/'+id);
+    applySheetData(r.data);
+    masterViewing = true;
+    document.getElementById('master-view-who').textContent = username + ' — "' + sheetName + '"';
+    document.getElementById('master-view-banner').style.display = 'block';
+    document.getElementById('save-panel').style.display = 'none';
+    setFormDisabled(true);
+    setStatus('Visualizando a ficha de '+username+' (somente leitura).');
+    document.getElementById('master-view-banner').scrollIntoView({behavior:'smooth', block:'start'});
+  }catch(e){
+    setStatus('Não foi possível abrir essa ficha: '+e.message, true);
+  }
+}
+
+function exitMasterView(){
+  masterViewing = false;
+  document.getElementById('master-view-banner').style.display = 'none';
+  document.getElementById('save-panel').style.display = 'block';
+  setFormDisabled(false);
+  newSheet();
+}
+
+function setFormDisabled(disabled){
+  const excludeIds = ['master-panel','master-view-banner'];
+  document.querySelectorAll('#app-content input, #app-content select, #app-content textarea, #app-content button')
+    .forEach(el=>{
+      if(excludeIds.some(id => el.closest('#'+id))) return;
+      if(el.closest('.header') || el.closest('footer')) return;
+      el.disabled = disabled;
+    });
 }
 
 function newSheet(){
