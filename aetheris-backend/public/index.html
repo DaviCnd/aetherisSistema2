@@ -479,7 +479,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px;}
     <h2><span class="bar"></span>Poder Único da Alma</h2>
     <div class="hint" style="margin-bottom:14px;">
       Monte seus próprios poderes combinando um <b>tipo de dano</b>, <b>debuffs/efeitos</b> e <b>melhorias</b>.
-      Limites por nível: <b>Comum</b> = 1 de cada · <b>Avançado</b> = 2 de cada · <b>Lendário</b> = 3 de cada (efeitos únicos, combine com o mestre).
+      Limites por nível: <b>Comum</b> = 1 de cada · <b>Intermediário</b> = 2 de cada · <b>Avançado</b> = 3 de cada (efeitos únicos, combine com o mestre).
       Regra geral: dano alto = pouco controle, controle alto = pouco dano, efeitos fortes duram pouco.
     </div>
     <div id="powers-list"></div>
@@ -564,7 +564,7 @@ const POWER_UPGRADES = [
   {nome:'Escudo mágico', efeito:'Reduz dano recebido', custo:5},
   {nome:'Reflexão', efeito:'Devolve parte do dano', custo:10},
 ];
-const POWER_TIER_LIMITS = {'Comum':1, 'Avançado':2, 'Lendário':3};
+const POWER_TIER_LIMITS = {'Comum':1, 'Intermediário':2, 'Avançado':3};
 
 const ATTRS = ['forca','destreza','intelecto','vontade','fe'];
 const ATTR_LABEL = {forca:'Força',destreza:'Destreza',intelecto:'Intelecto',vontade:'Vontade',fe:'Fé'};
@@ -946,8 +946,8 @@ function addPowerCard(data){
       <div class="field" style="flex:1 1 140px;"><label>Nível</label>
         <select class="pw-tier" onchange="onPowerTierChange(this)">
           <option ${(!data.tier||data.tier==='Comum')?'selected':''}>Comum</option>
+          <option ${data.tier==='Intermediário'?'selected':''}>Intermediário</option>
           <option ${data.tier==='Avançado'?'selected':''}>Avançado</option>
-          <option ${data.tier==='Lendário'?'selected':''}>Lendário</option>
         </select>
       </div>
       <div class="power-cost-badge">Custo total<br><span class="pw-total">0</span></div>
