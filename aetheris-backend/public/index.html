@@ -197,16 +197,17 @@ table.skills tr.group-row td{
 .train-controls .stepper-btn{width:22px;height:22px;font-size:13px;}
 .train-val{min-width:16px;text-align:center;}
 
-.bless-row{
-  display:grid;grid-template-columns:1fr 1.5fr 2fr auto;gap:8px;align-items:start;margin-bottom:10px;
-}
-@media(max-width:800px){.bless-row{grid-template-columns:1fr 1fr;} .bless-row>*:nth-child(3){grid-column:1/-1;}}
-.bless-info{
-  background:#15111d;border:1px solid var(--line);border-radius:6px;padding:6px 10px;
-  font-size:11.5px;color:var(--muted);min-height:34px;
-}
-.bless-info .bless-tipo{display:block;text-transform:uppercase;font-size:9.5px;letter-spacing:.05em;color:var(--gold-dim);margin-bottom:2px;}
-.bless-info .bless-custo{display:block;margin-top:3px;font-weight:600;color:var(--gold);}
+.bless-card{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:14px;}
+.bless-card-head{display:flex;gap:10px;align-items:end;margin-bottom:12px;}
+.bless-card-head .field{flex:1 1 260px;}
+.bless-skills{display:block;}
+.skill{border:1px solid var(--line);border-radius:6px;padding:8px 12px;margin-bottom:8px;background:#15111d;}
+.skill-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;}
+.skill-name{font-weight:600;color:var(--ink);font-size:13px;}
+.skill-cost{font-size:11px;color:var(--gold);font-weight:700;white-space:nowrap;}
+.skill-tipo{font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:.05em;margin:2px 0 4px;}
+.skill-efeito{font-size:12.5px;color:var(--muted);}
+.tag-base{font-size:9px;background:var(--gold-dim);color:#0a0910;padding:1px 6px;border-radius:3px;margin-left:6px;font-weight:700;}
 
 .power-card{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:16px;}
 .power-card-head{display:flex;gap:10px;align-items:end;margin-bottom:14px;flex-wrap:wrap;}
@@ -476,10 +477,10 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px;}
   </div>
 
   <div class="panel">
-    <h2><span class="bar"></span>Bênçãos Divinas Conhecidas</h2>
+    <h2><span class="bar"></span>Deuses Cultuados &amp; Bênçãos</h2>
     <div id="bless-list"></div>
-    <button class="add-btn" onclick="addBlessingRow()">+ Adicionar Bênção</button>
-    <div class="hint">Escolha o deus e a bênção — os detalhes (tipo, efeito e custo) são preenchidos automaticamente, direto da lore. Deuses de culto proibido (como Apep) não têm bênçãos jogáveis.</div>
+    <button class="add-btn" onclick="addBlessingRow()">+ Cultuar um Deus</button>
+    <div class="hint">Escolha um deus e desbloqueie automaticamente <b>todas</b> as bênçãos dele — não é preciso escolher uma por uma. Deuses de culto proibido (como Apep) não têm bênçãos jogáveis.</div>
   </div>
 
   <div class="panel">
@@ -1827,57 +1828,52 @@ const BLESSING_GOD_NAMES = Object.keys(BLESSINGS_DB);
 function addBlessingRow(data){
   data = data || {};
   const wrap = document.getElementById('bless-list');
-  const row = document.createElement('div');
-  row.className='bless-row';
+  const card = document.createElement('div');
+  card.className='bless-card';
   const godOptions = '<option value="">— escolha o deus —</option>' +
     BLESSING_GOD_NAMES.map(g=>`<option value="${g}" ${g===data.deus?'selected':''}>${g}</option>`).join('');
-  row.innerHTML = `
-    <div class="field"><label>Deus</label><select class="b-deus" onchange="onBlessDeusChange(this)">${godOptions}</select></div>
-    <div class="field"><label>Bênção</label><select class="b-nome" onchange="onBlessNomeChange(this)"><option value="">— escolha o deus primeiro —</option></select></div>
-    <div class="field"><label>Detalhes</label><div class="bless-info">—</div></div>
-    <button class="remove-btn" onclick="this.parentElement.remove()">×</button>
+  card.innerHTML = `
+    <div class="bless-card-head">
+      <div class="field"><label>Deus Cultuado</label><select class="b-deus" onchange="onBlessDeusChange(this)">${godOptions}</select></div>
+      <button class="remove-btn" onclick="this.closest('.bless-card').remove()" title="Remover">×</button>
+    </div>
+    <div class="bless-skills"></div>
   `;
-  wrap.appendChild(row);
-  if(data.deus) populateBlessOptions(row, data.deus, data.nome);
-}
-
-function populateBlessOptions(row, deus, selectedNome){
-  const sel = row.querySelector('.b-nome');
-  const godData = BLESSINGS_DB[deus];
-  if(!godData || !godData.skills.length){
-    sel.innerHTML = '<option value="">— este deus não concede bênçãos jogáveis —</option>';
-    updateBlessInfo(row);
-    return;
-  }
-  sel.innerHTML = '<option value="">— escolha a bênção —</option>' +
-    godData.skills.map(s=>`<option value="${s.nome}" ${s.nome===selectedNome?'selected':''}>${s.nome}</option>`).join('');
-  updateBlessInfo(row);
+  wrap.appendChild(card);
+  if(data.deus) renderBlessSkills(card, data.deus);
 }
 
 function onBlessDeusChange(sel){
-  populateBlessOptions(sel.closest('.bless-row'), sel.value, null);
+  renderBlessSkills(sel.closest('.bless-card'), sel.value);
 }
-function onBlessNomeChange(sel){
-  updateBlessInfo(sel.closest('.bless-row'));
-}
-function updateBlessInfo(row){
-  const deus = row.querySelector('.b-deus').value;
-  const nome = row.querySelector('.b-nome').value;
-  const info = row.querySelector('.bless-info');
+
+function renderBlessSkills(card, deus){
+  const list = card.querySelector('.bless-skills');
+  if(!deus){ list.innerHTML=''; return; }
   const godData = BLESSINGS_DB[deus];
-  const skill = godData && godData.skills.find(s=>s.nome===nome);
-  if(!skill){ info.innerHTML = '—'; return; }
-  info.innerHTML = `<span class="bless-tipo">${skill.tipo}</span>${skill.efeito}<span class="bless-custo">Custo ${skill.custo}${skill.base?' (Base)':''}</span>`;
+  if(!godData || !godData.skills.length){
+    list.innerHTML = '<div class="hint" style="margin:4px 0 0;">Este deus não concede bênçãos jogáveis (culto proibido ou apenas narrativo).</div>';
+    return;
+  }
+  list.innerHTML = godData.skills.map(s=>`
+    <div class="skill">
+      <div class="skill-head">
+        <span class="skill-name">${s.nome}</span>${s.base?'<span class="tag-base">BASE</span>':''}
+        <span class="skill-cost">Custo ${s.custo}</span>
+      </div>
+      <div class="skill-tipo">${s.tipo}</div>
+      <div class="skill-efeito">${s.efeito}</div>
+    </div>
+  `).join('');
 }
 
 function clearBlessingRows(){
   document.getElementById('bless-list').innerHTML = '';
 }
 function collectBlessings(){
-  return Array.from(document.querySelectorAll('#bless-list .bless-row')).map(row=>({
-    deus: row.querySelector('.b-deus').value,
-    nome: row.querySelector('.b-nome').value,
-  })).filter(b=>b.deus && b.nome);
+  return Array.from(document.querySelectorAll('#bless-list .bless-card')).map(card=>({
+    deus: card.querySelector('.b-deus').value,
+  })).filter(b=>b.deus);
 }
 
 /* ---- Poderes mágicos personalizados ---- */
