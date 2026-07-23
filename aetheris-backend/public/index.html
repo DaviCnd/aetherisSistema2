@@ -81,6 +81,35 @@ body{
 .grid-5{grid-template-columns:repeat(5,1fr);}
 @media(max-width:680px){.grid-2,.grid-3,.grid-4,.grid-5{grid-template-columns:1fr 1fr;}}
 
+.save-btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;}
+.table-scroll table.skills{min-width:520px;}
+
+/* ---- Telas de celular ---- */
+@media(max-width:600px){
+  body{padding:16px 10px 60px;}
+  .header h1{font-size:30px;}
+  .header p{font-size:12px;}
+  .panel{padding:14px 14px;border-radius:8px;}
+  .panel h2{font-size:17px;margin-bottom:12px;}
+  .grid{gap:10px;}
+  .grid-2,.grid-3,.grid-4,.grid-5{grid-template-columns:1fr 1fr;}
+  .save-controls{grid-template-columns:1fr!important;}
+  .save-btn-row{width:100%;}
+  .save-btn-row button{flex:1 1 auto;min-width:0;}
+  .bless-row{grid-template-columns:1fr 1fr!important;}
+  .attr-card .val{font-size:24px;}
+  .level-badge{width:52px;height:52px;font-size:26px;}
+  .level-row{gap:12px;}
+  table.skills{font-size:12px;}
+  table.skills th,table.skills td{padding:5px 6px;}
+}
+@media(max-width:400px){
+  .header h1{font-size:26px;}
+  .grid-4{grid-template-columns:1fr 1fr;}
+  .grid-3{grid-template-columns:1fr 1fr;}
+}
+
 label{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
 input[type=text], input[type=number], select, textarea{
   width:100%;background:#0d0b13;border:1px solid var(--line);color:var(--ink);
@@ -238,7 +267,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px;}
 
   <div class="panel" id="save-panel">
     <h2><span class="bar"></span>Fichas Salvas (na sua conta)</h2>
-    <div class="grid grid-3" style="align-items:end;">
+    <div class="grid grid-3 save-controls" style="align-items:end;">
       <div class="field">
         <label>Nome pra salvar</label>
         <input type="text" id="save-name" placeholder="Ex: Kael, o Lupir">
@@ -247,7 +276,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px;}
         <label>Fichas salvas</label>
         <select id="sheet-select"><option value="">— nenhuma salva —</option></select>
       </div>
-      <div style="display:flex;gap:8px;">
+      <div class="save-btn-row">
         <button class="add-btn" onclick="saveCurrentSheet()">Salvar</button>
         <button class="add-btn" onclick="loadSelectedSheet()">Carregar</button>
         <button class="remove-btn" style="width:auto;padding:0 12px;" onclick="deleteSelectedSheet()">Excluir</button>
@@ -395,12 +424,14 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px;}
   <div class="panel">
     <h2><span class="bar"></span>Perícias</h2>
     <div class="pool-note" style="margin-bottom:10px;">Pontos de treino disponíveis: <b id="train-pool-remaining">4</b> / <span id="train-pool-total">4</span> (máx. +2 por perícia vindo só do treino)</div>
+    <div class="table-scroll">
     <table class="skills">
       <thead>
         <tr><th style="width:26%">Perícia</th><th>Atributo</th><th>Raça</th><th>Profissão</th><th>Treino</th><th>Total</th></tr>
       </thead>
       <tbody id="skills-body"></tbody>
     </table>
+    </div>
   </div>
 
   <div class="panel">
