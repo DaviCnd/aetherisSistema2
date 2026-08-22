@@ -1,4 +1,4 @@
-// Aetheris — servidor de fichas com login e banco de dados (Turso/libSQL)
+// Aetheris — servidor de fichas v2 com login e banco de dados (Turso/libSQL)
 // Rodar localmente: npm install && npm start (porta padrão 3000)
 //
 // Variáveis de ambiente necessárias:
@@ -57,7 +57,7 @@ async function init() {
 }
 
 // ---------- Middlewares ----------
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '5mb' }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -136,10 +136,28 @@ app.get('/api/me', auth, (req, res) => {
 // ---------- Fichas (CRUD, sempre isoladas por usuário) ----------
 app.get('/api/sheets', auth, wrap(async (req, res) => {
   const result = await db.execute({
-    sql: 'SELECT id, name, updated_at FROM sheets WHERE user_id = ? ORDER BY updated_at DESC',
+    sql: 'SELECT id, name, updated_at, data FROM sheets WHERE user_id = ? ORDER BY updated_at DESC',
     args: [req.user.id],
   });
-  res.json(result.rows);
+  const rows = result.rows.map((row) => {
+    let parsed = {};
+    try { parsed = JSON.parse(row.data || '{}'); } catch {}
+    const st = parsed.state || {};
+    const fields = parsed.fields || {};
+    return {
+      id: row.id,
+      name: row.name,
+      updated_at: row.updated_at,
+      summary: {
+        level: st.level || 1,
+        race: st.race || '',
+        profession: st.profession || '',
+        region: fields['f-regiao'] || '',
+        avatar: st.avatarData || '',
+      },
+    };
+  });
+  res.json(rows);
 }));
 
 app.get('/api/sheets/:id', auth, wrap(async (req, res) => {
