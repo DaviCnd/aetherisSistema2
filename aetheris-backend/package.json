@@ -1,10 +1,11 @@
 {
   "name": "aetheris-fichas",
-  "version": "1.0.0",
-  "description": "Servidor de fichas de personagem para o RPG Aetheris, com login e banco de dados.",
+  "version": "2.2.0",
+  "description": "Arquivo de personagens do RPG Aetheris, com visual do Grimório e criação fiel à Edição Expandida.",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "check": "node --check server.js && node --check public/aetheris-data.js && node --check public/app.js"
   },
   "engines": {
     "node": ">=18"
